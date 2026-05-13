@@ -34,4 +34,5 @@ public class User : AuditableEntity, IAggregateRoot
     public Guid RoleId { get; set; }
 
     public Role Role { get; set; } = null!;
+    public ICollection<Class> Classes { get; set; } = new List<Class>();
 }

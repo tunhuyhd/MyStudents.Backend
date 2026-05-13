@@ -21,11 +21,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
-    public DbSet<Teacher> Teachers => Set<Teacher>();
     public DbSet<Class> Classes => Set<Class>();
     public DbSet<Student> Students => Set<Student>();
+    public DbSet<Subject> Subjects => Set<Subject>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         

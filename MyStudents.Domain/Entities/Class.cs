@@ -12,10 +12,16 @@ public class Class : AuditableEntity, IAggregateRoot
     [Column("code")]
     public string Code { get; set; } = string.Empty;
 
-    [Column("teacher_id")]
-    public Guid TeacherId { get; set; }
+    [Column("category_of_class")]
+    public CategoryOfClass CategoryOfClass { get; set; }
 
-    public Teacher Teacher { get; set; } = null!;
+    [Column("subject_id")]
+	public Guid SubjectId { get; set; }
+    public Subject Subject { get; set; } = null!;
+
+	[Column("teacher_id")]
+    public Guid TeacherId { get; set; }
+    public User Teacher { get; set; } = null!;
 
     public ICollection<Student> Students { get; set; } = new List<Student>();
 
