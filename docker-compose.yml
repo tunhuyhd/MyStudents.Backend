@@ -1,0 +1,28 @@
+services:
+  mystudents.api:
+    image: mystudents-api
+    build:
+      context: .
+      dockerfile: MyStudents.WebApi/Dockerfile
+    ports:
+      - "7000:80"
+      - "7001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=mystudents.db;Database=MyStudents;Username=postgres;Password=postgres
+    depends_on:
+      - mystudents.db
+
+  mystudents.db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=MyStudents
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
