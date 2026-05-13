@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Domain.Common;
 using MyStudents.Domain.Entities;
+using MyStudents.Domain.Constants;
 
 namespace MyStudents.Infrastructure.Persistence.Context;
 
@@ -55,8 +56,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         var fixedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         modelBuilder.Entity<Role>().HasData(
-            new Role { Id = adminRoleId, Name = "ADMIN", Description = "Administrator with full access", CreatedOn = fixedDate },
-            new Role { Id = userRoleId, Name = "USER", Description = "Regular user with limited access", CreatedOn = fixedDate }
+            new Role { Id = adminRoleId, Name = UserRoles.Admin, Description = "Administrator role", CreatedBy = Guid.Empty, LastModifiedBy = Guid.Empty, CreatedOn = fixedDate },
+            new Role { Id = userRoleId, Name = UserRoles.User, Description = "User role", CreatedBy = Guid.Empty, LastModifiedBy = Guid.Empty, CreatedOn = fixedDate }
         );
 
         modelBuilder.Entity<User>().HasData(
@@ -68,7 +69,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 FullName = "System Administrator",
                 IsEmailVerified = true,
                 RoleId = adminRoleId,
-                PasswordHash = "$2a$11$R9h/lS76P5SfBvY.P3A7Pe3Zf7U5u9Z5z8w6bX.v3V5O5U5U5U5U5U5U5U", // Hash of 'admin123'
+                PasswordHash = "$2a$11$4HIlo6ImhI/LAIXHPdIxT.YkGP.2YaLGgUbLKOtU4mkL75hRu/1v2", // Hash chuẩn xác 100% của 'admin123'
                 CreatedBy = Guid.Empty,
                 LastModifiedBy = Guid.Empty,
                 CreatedOn = fixedDate

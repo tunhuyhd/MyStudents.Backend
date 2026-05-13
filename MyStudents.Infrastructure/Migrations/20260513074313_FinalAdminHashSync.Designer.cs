@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyStudents.Infrastructure.Persistence.Context;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyStudents.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513074313_FinalAdminHashSync")]
+    partial class FinalAdminHashSync
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,18 +129,18 @@ namespace MyStudents.Infrastructure.Migrations
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Administrator role",
+                            Description = "Administrator with full access",
                             LastModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Name = "Admin"
+                            Name = "ADMIN"
                         },
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "User role",
+                            Description = "Regular user with limited access",
                             LastModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Name = "User"
+                            Name = "USER"
                         });
                 });
 

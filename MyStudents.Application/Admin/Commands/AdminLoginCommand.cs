@@ -3,25 +3,28 @@ using Microsoft.EntityFrameworkCore;
 using MyStudents.Application.Auth.Dto;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Domain.Constants;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace MyStudents.Application.Auth.Commands;
+namespace MyStudents.Application.Admin.Commands;
 
-public record LoginCommand(string Username, string Password) : IRequest<AuthResponse>;
+public record AdminLoginCommand(string Username, string Password) : IRequest<AuthResponse>;
 
-public class LoginCommandHandler(
+public class AdminLoginCommandHandler(
     IApplicationDbContext context, 
     IJwtService jwtService,
-    IPasswordHasher passwordHasher) : IRequestHandler<LoginCommand, AuthResponse>
+    IPasswordHasher passwordHasher) : IRequestHandler<AdminLoginCommand, AuthResponse>
 {
-    public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<AuthResponse> Handle(AdminLoginCommand request, CancellationToken cancellationToken)
     {
         var user = await context.Users
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
 
-        if (user == null || string.Equals(user.Role.Name, UserRoles.Admin, StringComparison.OrdinalIgnoreCase) || !passwordHasher.Verify(request.Password, user.PasswordHash))
+        // Kiểm tra user tồn tại VÀ phải có quyền Admin (không phân biệt hoa thường)
+        if (user == null || !string.Equals(user.Role.Name, UserRoles.Admin, System.StringComparison.OrdinalIgnoreCase) || !passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            throw new Exception("Invalid username or password.");
+            throw new System.Exception("Invalid admin credentials.");
         }
 
         var token = jwtService.GenerateToken(user);
