@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Folder Include="Classroom\Queries\" />
+    <Folder Include="Dto\" />
   </ItemGroup>
 
   <PropertyGroup>
