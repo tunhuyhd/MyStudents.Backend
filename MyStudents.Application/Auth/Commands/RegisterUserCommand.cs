@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyStudents.Application.Auth.Dto;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Domain.Entities;
+using MyStudents.Domain.Constants;
 
 namespace MyStudents.Application.Auth.Commands;
 
@@ -23,7 +24,7 @@ public class RegisterUserCommandHandler(
         if (await context.Users.AnyAsync(u => u.Email == request.Email, cancellationToken))
             throw new Exception("Email already exists.");
 
-        var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "USER", cancellationToken);
+        var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == UserRoles.User, cancellationToken);
         if (userRole == null) throw new Exception("User role not found.");
 
         var user = new User

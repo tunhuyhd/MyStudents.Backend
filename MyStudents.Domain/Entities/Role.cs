@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using MyStudents.Domain.Common;
+using MyStudents.Domain.Constants;
 
 namespace MyStudents.Domain.Entities;
 
@@ -16,6 +17,6 @@ public class Role : AuditableEntity, IAggregateRoot
 
     public Role() { }
 
-    public static Role Admin => new Role { Name = "ADMIN", Description = "Administrator with full access" };
-    public static Role User => new Role { Name = "USER", Description = "Regular user with limited access" };
+    public static Role Admin => new Role { Name = UserRoles.Admin, Description = "Administrator with full access" };
+    public static Role User => new Role { Name = UserRoles.User, Description = "Regular user with limited access" };
 }
