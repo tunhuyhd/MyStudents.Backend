@@ -25,6 +25,7 @@ public class StudentSummaryDto
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string StudentIdNumber { get; set; } = string.Empty;
+    public StudentClassStatus Status { get; set; }
 }
 
 public class SessionDto

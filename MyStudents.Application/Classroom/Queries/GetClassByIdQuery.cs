@@ -46,8 +46,9 @@ public class GetClassByIdQueryHandler(
                 Students = c.Students.Select(cs => new StudentSummaryDto
                 {
                     Id = cs.Student.Id,
-                    FullName = cs.Student.FirstName + " " + cs.Student.LastName,
+                    FullName = cs.Student.LastName + " " + cs.Student.FirstName,
                     Email = cs.Student.Email,
+                    Status = cs.Status
                 }).ToList(),
                 Sessions = c.Sessions.OrderByDescending(s => s.Date).Select(s => new SessionDto
                 {
