@@ -90,8 +90,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             if (typeof(ISoftDelete).IsAssignableFrom(entityType.ClrType))
             {
                 var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var property = Expression.Property(parameter, nameof(ISoftDelete.DeletedOn));
-                var condition = Expression.Equal(property, Expression.Constant(null, typeof(DateTime?)));
+                var property = Expression.Property(parameter, nameof(ISoftDelete.IsDeleted));
+                var condition = Expression.Equal(property, Expression.Constant(false));
                 var lambda = Expression.Lambda(condition, parameter);
                 
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
@@ -102,6 +102,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.UserId ?? Guid.Empty;
+        var now = DateTime.UtcNow;
 
         // Update audit fields
         foreach (var entry in ChangeTracker.Entries<IAuditableEntity>())
@@ -110,10 +111,24 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             {
                 case EntityState.Added:
                     entry.Entity.CreatedBy = userId; 
+                    entry.Entity.CreatedOn = now;
                     break;
                 case EntityState.Modified:
                     entry.Entity.LastModifiedBy = userId; 
-                    entry.Entity.LastModifiedOn = DateTime.UtcNow;
+                    entry.Entity.LastModifiedOn = now;
+                    break;
+                case EntityState.Deleted:
+                    if (entry.Entity is ISoftDelete softDelete)
+                    {
+                        entry.State = EntityState.Modified;
+                        softDelete.IsDeleted = true;
+                        softDelete.DeletedBy = userId;
+                        softDelete.DeletedOn = now;
+                        
+                        // Also update last modified
+                        entry.Entity.LastModifiedBy = userId;
+                        entry.Entity.LastModifiedOn = now;
+                    }
                     break;
             }
         }

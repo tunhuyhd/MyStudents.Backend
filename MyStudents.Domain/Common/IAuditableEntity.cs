@@ -5,19 +5,23 @@ namespace MyStudents.Domain.Common;
 public interface IAuditableEntity
 {
     Guid CreatedBy { get; set; }
-    DateTime CreatedOn { get; }
+    DateTime CreatedOn { get; set; }
     Guid LastModifiedBy { get; set; }
     DateTime? LastModifiedOn { get; set; }
 }
 
 public interface ISoftDelete
 {
+    bool IsDeleted { get; set; }
     DateTime? DeletedOn { get; set; }
     Guid? DeletedBy { get; set; }
 }
 
 public abstract class AuditableEntity : Entity, IAuditableEntity, ISoftDelete
 {
+    [Column("is_deleted")]
+    public bool IsDeleted { get; set; } = false;
+
     [Column("created_by")]
     public Guid CreatedBy { get; set; }
 
