@@ -25,6 +25,7 @@ public class GetClassesQueryHandler(
                 Id = c.Id,
                 Name = c.Name,
                 Code = c.Code,
+                Status = c.Status,
                 Category = c.CategoryOfClass,
                 SubjectId = c.SubjectId,
                 SubjectName = c.Subject.Name,

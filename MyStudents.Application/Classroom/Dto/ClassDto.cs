@@ -7,6 +7,7 @@ public class ClassDto
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
+    public ClassStatus Status { get; set; }
     public CategoryOfClass Category { get; set; }
     public Guid SubjectId { get; set; }
     public string SubjectName { get; set; } = string.Empty;

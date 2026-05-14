@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using MyStudents.Domain.Common;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Domain.Entities;
 
@@ -13,13 +14,31 @@ public class Student : AuditableEntity, IAggregateRoot
     public string LastName { get; set; } = string.Empty;
 
     [Column("email")]
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; } = string.Empty;
 
     [Column("date_of_birth")]
-    public DateTime DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
-    [Column("student_id_number")]
-    public string StudentIdNumber { get; set; } = string.Empty;
+    [Column("gender")]
+    public Gender Gender { get; set; }
+
+    [Column("school")]
+    public string? School { get; set; } = string.Empty;
+
+    [Column("parent_name")]
+    public string? ParentName { get; set; } = string.Empty;
+
+    [Column("parent_phone")]
+    public string? ParentPhone { get; set; } = string.Empty;
+
+    [Column("phone")]
+    public string? Phone { get; set; } = string.Empty;
+
+    [Column("address")]
+    public string? Address { get; set; } = string.Empty;
+
+    [Column("note")]
+    public string? Note { get; set; }
 
 	public ICollection<ClassStudent> Classes { get; set; } = new List<ClassStudent>();
 

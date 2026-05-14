@@ -13,6 +13,9 @@ public class Class : AuditableEntity, IAggregateRoot
 	[Column("code")]
 	public string Code { get; set; } = string.Empty;
 
+	[Column("status")]
+	public ClassStatus Status { get; set; } = ClassStatus.Active;
+
 	[Column("category_of_class")]
 	public CategoryOfClass CategoryOfClass { get; set; }
 

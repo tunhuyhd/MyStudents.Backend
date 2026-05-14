@@ -14,6 +14,7 @@ public record UpdateClassCommand(
     Guid SubjectId,
     DateOnly StartDate,
     DateOnly ExpectedEndDate,
+    ClassStatus Status,
     List<CreateClassScheduleInput>? Schedules = null
 ) : IRequest<Unit>;
 
@@ -42,6 +43,7 @@ public class UpdateClassCommandHandler(
         entity.SubjectId = command.SubjectId;
         entity.StartDate = command.StartDate;
         entity.ExpectedEndDate = command.ExpectedEndDate;
+        entity.Status = command.Status;
 
         // Simple sync for schedules: clear and re-add
         entity.Schedules.Clear();

@@ -2,6 +2,7 @@ using MediatR;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Application.Classroom.Dto;
 using Microsoft.EntityFrameworkCore;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Application.Classroom.Queries;
 
@@ -28,6 +29,7 @@ public class GetClassByIdQueryHandler(
                 Id = c.Id,
                 Name = c.Name,
                 Code = c.Code,
+                Status = c.Status,
                 Category = c.CategoryOfClass,
                 SubjectId = c.SubjectId,
                 SubjectName = c.Subject.Name,
@@ -46,7 +48,6 @@ public class GetClassByIdQueryHandler(
                     Id = cs.Student.Id,
                     FullName = cs.Student.FirstName + " " + cs.Student.LastName,
                     Email = cs.Student.Email,
-                    StudentIdNumber = cs.Student.StudentIdNumber
                 }).ToList(),
                 Sessions = c.Sessions.OrderByDescending(s => s.Date).Select(s => new SessionDto
                 {
@@ -57,7 +58,7 @@ public class GetClassByIdQueryHandler(
                     Status = s.Status,
                     Note = s.Note,
                     TotalCount = c.Students.Count,
-                    PresentCount = s.Attendances.Count(a => a.IsPresent)
+                    PresentCount = s.Attendances.Count(a => a.Status == AttendanceStatus.Present)
                 }).ToList()
             })
             .FirstOrDefaultAsync(cancellationToken);
