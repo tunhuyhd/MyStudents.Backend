@@ -50,13 +50,14 @@ public class GetClassByIdQueryHandler(
                     Email = cs.Student.Email,
                     Status = cs.Status
                 }).ToList(),
-                Sessions = c.Sessions.OrderByDescending(s => s.Date).Select(s => new SessionDto
+                Sessions = c.Sessions.OrderBy(s => s.OrderIndex).Select(s => new SessionDto
                 {
                     Id = s.Id,
                     Date = s.Date,
                     StartTime = s.StartTime,
                     EndTime = s.EndTime,
                     Status = s.Status,
+                    OrderIndex = s.OrderIndex,
                     Note = s.Note,
                     TotalCount = c.Students.Count,
                     PresentCount = s.Attendances.Count(a => a.Status == AttendanceStatus.Present)

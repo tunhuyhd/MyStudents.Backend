@@ -27,15 +27,3 @@ public class StudentSummaryDto
     public string StudentIdNumber { get; set; } = string.Empty;
     public StudentClassStatus Status { get; set; }
 }
-
-public class SessionDto
-{
-    public Guid Id { get; set; }
-    public DateOnly Date { get; set; }
-    public TimeOnly StartTime { get; set; }
-    public TimeOnly EndTime { get; set; }
-    public SessionStatus Status { get; set; }
-    public string? Note { get; set; }
-    public int PresentCount { get; set; }
-    public int TotalCount { get; set; }
-}

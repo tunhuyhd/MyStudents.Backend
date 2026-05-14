@@ -31,6 +31,23 @@ public class AddStudentToClassCommandHandler(IApplicationDbContext context) : IR
         };
 
         context.ClassStudents.Add(classStudent);
+
+        // Create attendances for all existing sessions of this class
+        var sessions = await context.ClassSessions
+            .Where(s => s.ClassId == request.ClassId)
+            .Select(s => s.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var sessionId in sessions)
+        {
+            context.Attendances.Add(new Attendance
+            {
+                SessionId = sessionId,
+                StudentId = request.StudentId,
+                Status = AttendanceStatus.Present
+            });
+        }
+
         await context.SaveChangesAsync(cancellationToken);
 
         return true;

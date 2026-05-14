@@ -19,6 +19,9 @@ public class ClassSession : AuditableEntity, IAggregateRoot
 
     public ClassSchedule? Schedule { get; set; }
 
+    [Column("order_index")]
+    public int OrderIndex { get; set; }
+
     [Column("date")]
     public DateOnly Date { get; set; }
 

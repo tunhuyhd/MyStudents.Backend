@@ -54,6 +54,27 @@ public class CreateClassCommandHandler(
                     DurationHours = s.DurationHours
                 });
             }
+
+            // Generate ClassSessions
+            var currentDate = command.StartDate;
+            int orderIndex = 1;
+            while (currentDate <= command.ExpectedEndDate)
+            {
+                var matchingSchedules = command.Schedules.Where(s => s.DayOfWeek == currentDate.DayOfWeek);
+                foreach (var s in matchingSchedules)
+                {
+                    entity.Sessions.Add(new ClassSession
+                    {
+                        Id = Guid.NewGuid(),
+                        Date = currentDate,
+                        StartTime = s.StartTime,
+                        EndTime = s.StartTime.AddHours((double)s.DurationHours),
+                        Status = SessionStatus.Scheduled,
+                        OrderIndex = orderIndex++
+                    });
+                }
+                currentDate = currentDate.AddDays(1);
+            }
         }
 
         context.Classes.Add(entity);
