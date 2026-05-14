@@ -96,6 +96,17 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
             }
+
+            // Ensure all DateTime properties are handled as UTC for PostgreSQL
+            var properties = entityType.GetProperties()
+                .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?));
+
+            foreach (var property in properties)
+            {
+                property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+                    v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc),
+                    v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc)));
+            }
         }
     }
 
