@@ -14,4 +14,26 @@ public class ClassDto
     public DateOnly ExpectedEndDate { get; set; }
     public int StudentCount { get; set; }
     public List<ClassScheduleDto> Schedules { get; set; } = new();
+    public List<StudentSummaryDto> Students { get; set; } = new();
+    public List<SessionDto> Sessions { get; set; } = new();
+}
+
+public class StudentSummaryDto
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string StudentIdNumber { get; set; } = string.Empty;
+}
+
+public class SessionDto
+{
+    public Guid Id { get; set; }
+    public DateOnly Date { get; set; }
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly EndTime { get; set; }
+    public SessionStatus Status { get; set; }
+    public string? Note { get; set; }
+    public int PresentCount { get; set; }
+    public int TotalCount { get; set; }
 }

@@ -19,7 +19,10 @@ public class GetClassByIdQueryHandler(
             .Where(c => c.Id == request.Id && c.TeacherId == userId)
             .Include(c => c.Subject)
             .Include(c => c.Students)
+                .ThenInclude(cs => cs.Student)
             .Include(c => c.Schedules)
+            .Include(c => c.Sessions)
+                .ThenInclude(s => s.Attendances)
             .Select(c => new ClassDto
             {
                 Id = c.Id,
@@ -37,6 +40,24 @@ public class GetClassByIdQueryHandler(
                     DayOfWeek = s.DayOfWeek,
                     StartTime = s.StartTime,
                     DurationHours = s.DurationHours
+                }).ToList(),
+                Students = c.Students.Select(cs => new StudentSummaryDto
+                {
+                    Id = cs.Student.Id,
+                    FullName = cs.Student.FirstName + " " + cs.Student.LastName,
+                    Email = cs.Student.Email,
+                    StudentIdNumber = cs.Student.StudentIdNumber
+                }).ToList(),
+                Sessions = c.Sessions.OrderByDescending(s => s.Date).Select(s => new SessionDto
+                {
+                    Id = s.Id,
+                    Date = s.Date,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime,
+                    Status = s.Status,
+                    Note = s.Note,
+                    TotalCount = c.Students.Count,
+                    PresentCount = s.Attendances.Count(a => a.IsPresent)
                 }).ToList()
             })
             .FirstOrDefaultAsync(cancellationToken);
