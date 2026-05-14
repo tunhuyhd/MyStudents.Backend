@@ -25,6 +25,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Subject> Subjects => Set<Subject>();
 
+	public DbSet<ClassSchedule> ClassSchedules => Set<ClassSchedule>();
+
+	public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
+
+	public DbSet<ClassStudent> ClassStudents => Set<ClassStudent>();
+
+	public DbSet<Attendance> Attendances => Set<Attendance>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

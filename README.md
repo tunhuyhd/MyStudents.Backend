@@ -1,6 +1,6 @@
 # MyStudents - Backend (Private Tutoring Management)
 
-Hệ thống quản lý lớp học thêm dành cho giáo viên, được xây dựng trên nền tảng .NET Core 10.
+Hệ thống quản lý lớp học dành cho giáo viên, được xây dựng trên nền tảng .NET Core 10.
 
 ## 🛠 Hướng dẫn về Database (Entity Framework Core)
 

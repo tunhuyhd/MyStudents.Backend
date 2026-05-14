@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyStudents.Infrastructure.Persistence.Context;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyStudents.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514032354_UpdateClass")]
+    partial class UpdateClass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,61 +24,6 @@ namespace MyStudents.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("MyStudents.Domain.Entities.Attendance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_on");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_on");
-
-                    b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("last_modified_by");
-
-                    b.Property<DateTime?>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_modified_on");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("text")
-                        .HasColumnName("note");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("session_id");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("attendances");
-                });
 
             modelBuilder.Entity("MyStudents.Domain.Entities.Class", b =>
                 {
@@ -205,10 +153,6 @@ namespace MyStudents.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("class_id");
-
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
@@ -217,10 +161,6 @@ namespace MyStudents.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("deleted_by");
@@ -228,10 +168,6 @@ namespace MyStudents.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_on");
-
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("end_time");
 
                     b.Property<Guid>("LastModifiedBy")
                         .HasColumnType("uuid")
@@ -245,25 +181,25 @@ namespace MyStudents.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("note");
 
-                    b.Property<Guid?>("ScheduleId")
+                    b.Property<Guid>("SessionId")
                         .HasColumnType("uuid")
-                        .HasColumnName("schedule_id");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("start_time");
+                        .HasColumnName("session_id");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
 
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_id");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ClassId");
+                    b.HasIndex("SessionId");
 
-                    b.HasIndex("ScheduleId");
+                    b.HasIndex("StudentId");
 
-                    b.ToTable("class_sessions");
+                    b.ToTable("ClassSessions");
                 });
 
             modelBuilder.Entity("MyStudents.Domain.Entities.ClassStudent", b =>
@@ -593,25 +529,6 @@ namespace MyStudents.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("MyStudents.Domain.Entities.Attendance", b =>
-                {
-                    b.HasOne("MyStudents.Domain.Entities.ClassSession", "Session")
-                        .WithMany("Attendances")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MyStudents.Domain.Entities.Student", "Student")
-                        .WithMany("Attendances")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-
-                    b.Navigation("Student");
-                });
-
             modelBuilder.Entity("MyStudents.Domain.Entities.Class", b =>
                 {
                     b.HasOne("MyStudents.Domain.Entities.Subject", "Subject")
@@ -644,19 +561,21 @@ namespace MyStudents.Infrastructure.Migrations
 
             modelBuilder.Entity("MyStudents.Domain.Entities.ClassSession", b =>
                 {
-                    b.HasOne("MyStudents.Domain.Entities.Class", "Class")
-                        .WithMany("Sessions")
-                        .HasForeignKey("ClassId")
+                    b.HasOne("MyStudents.Domain.Entities.ClassSession", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyStudents.Domain.Entities.ClassSchedule", "Schedule")
+                    b.HasOne("MyStudents.Domain.Entities.Student", "Student")
                         .WithMany()
-                        .HasForeignKey("ScheduleId");
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Class");
+                    b.Navigation("Session");
 
-                    b.Navigation("Schedule");
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("MyStudents.Domain.Entities.ClassStudent", b =>
@@ -693,14 +612,7 @@ namespace MyStudents.Infrastructure.Migrations
                 {
                     b.Navigation("Schedules");
 
-                    b.Navigation("Sessions");
-
                     b.Navigation("Students");
-                });
-
-            modelBuilder.Entity("MyStudents.Domain.Entities.ClassSession", b =>
-                {
-                    b.Navigation("Attendances");
                 });
 
             modelBuilder.Entity("MyStudents.Domain.Entities.Role", b =>
@@ -710,8 +622,6 @@ namespace MyStudents.Infrastructure.Migrations
 
             modelBuilder.Entity("MyStudents.Domain.Entities.Student", b =>
                 {
-                    b.Navigation("Attendances");
-
                     b.Navigation("Classes");
                 });
 

@@ -31,8 +31,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
             LastName = request.LastName,
             Email = request.Email,
             DateOfBirth = request.DateOfBirth,
-            StudentIdNumber = request.StudentIdNumber,
-            ClassId = request.ClassId
+            StudentIdNumber = request.StudentIdNumber
         };
 
         await _studentRepository.AddAsync(student, cancellationToken);

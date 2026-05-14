@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MyStudents.Domain.Entities;
+namespace MyStudents.Domain.Entities.Enum;
 
 public enum CategoryOfClass
 {

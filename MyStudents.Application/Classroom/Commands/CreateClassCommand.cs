@@ -2,10 +2,21 @@ using MediatR;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Application.Classroom.Commands;
 
-public record CreateClassCommand(string Name, string Code, CategoryOfClass Category, Guid SubjectId) : IRequest<Guid>;
+public record CreateClassScheduleInput(DayOfWeek DayOfWeek, TimeOnly StartTime, decimal DurationHours);
+
+public record CreateClassCommand(
+    string Name, 
+    string Code, 
+    CategoryOfClass Category, 
+    Guid SubjectId,
+    DateOnly StartDate,
+    DateOnly ExpectedEndDate,
+    List<CreateClassScheduleInput>? Schedules = null
+) : IRequest<Guid>;
 
 public class CreateClassCommandHandler(
     IApplicationDbContext context,
@@ -26,8 +37,24 @@ public class CreateClassCommandHandler(
             Code = command.Code,
             CategoryOfClass = command.Category,
             SubjectId = command.SubjectId,
-            TeacherId = userId
+            TeacherId = userId,
+            StartDate = command.StartDate,
+            ExpectedEndDate = command.ExpectedEndDate
         };
+
+        if (command.Schedules != null && command.Schedules.Any())
+        {
+            foreach (var s in command.Schedules)
+            {
+                entity.Schedules.Add(new ClassSchedule
+                {
+                    Id = Guid.NewGuid(),
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    DurationHours = s.DurationHours
+                });
+            }
+        }
 
         context.Classes.Add(entity);
         await context.SaveChangesAsync(cancellationToken);

@@ -19,6 +19,7 @@ public class GetClassesQueryHandler(
             .Where(c => c.TeacherId == userId)
             .Include(c => c.Subject)
             .Include(c => c.Students)
+            .Include(c => c.Schedules)
             .Select(c => new ClassDto
             {
                 Id = c.Id,
@@ -27,7 +28,16 @@ public class GetClassesQueryHandler(
                 Category = c.CategoryOfClass,
                 SubjectId = c.SubjectId,
                 SubjectName = c.Subject.Name,
-                StudentCount = c.Students.Count
+                StartDate = c.StartDate,
+                ExpectedEndDate = c.ExpectedEndDate,
+                StudentCount = c.Students.Count,
+                Schedules = c.Schedules.Select(s => new ClassScheduleDto
+                {
+                    Id = s.Id,
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    DurationHours = s.DurationHours
+                }).ToList()
             })
             .ToListAsync(cancellationToken);
     }

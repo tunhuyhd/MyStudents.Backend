@@ -21,10 +21,10 @@ public class Student : AuditableEntity, IAggregateRoot
     [Column("student_id_number")]
     public string StudentIdNumber { get; set; } = string.Empty;
 
-    [Column("class_id")]
-    public Guid ClassId { get; set; }
+	public ICollection<ClassStudent> Classes { get; set; } = new List<ClassStudent>();
 
-    public Class Class { get; set; } = null!;
+	public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
 
-    public Student() { }
+
+	public Student() { }
 }

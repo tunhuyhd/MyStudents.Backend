@@ -1,29 +1,44 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using MyStudents.Domain.Common;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Domain.Entities;
 
 [Table("classes")]
 public class Class : AuditableEntity, IAggregateRoot
 {
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+	[Column("name")]
+	public string Name { get; set; } = string.Empty;
 
-    [Column("code")]
-    public string Code { get; set; } = string.Empty;
+	[Column("code")]
+	public string Code { get; set; } = string.Empty;
 
-    [Column("category_of_class")]
-    public CategoryOfClass CategoryOfClass { get; set; }
+	[Column("category_of_class")]
+	public CategoryOfClass CategoryOfClass { get; set; }
 
-    [Column("subject_id")]
+	[Column("subject_id")]
 	public Guid SubjectId { get; set; }
-    public Subject Subject { get; set; } = null!;
+
+	public Subject Subject { get; set; } = null!;
 
 	[Column("teacher_id")]
-    public Guid TeacherId { get; set; }
-    public User Teacher { get; set; } = null!;
+	public Guid TeacherId { get; set; }
 
-    public ICollection<Student> Students { get; set; } = new List<Student>();
+	public User Teacher { get; set; } = null!;
 
-    public Class() { }
+	// Thời gian khóa học
+	[Column("start_date")]
+	public DateOnly StartDate { get; set; }
+
+	[Column("expected_end_date")]
+	public DateOnly ExpectedEndDate { get; set; }
+
+	// Navigation
+	public ICollection<ClassSchedule> Schedules { get; set; } = new List<ClassSchedule>();
+
+	public ICollection<ClassStudent> Students { get; set; } = new List<ClassStudent>();
+
+	public ICollection<ClassSession> Sessions { get; set; } = new List<ClassSession>();
+
+	public Class() { }
 }
