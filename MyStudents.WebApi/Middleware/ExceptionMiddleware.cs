@@ -58,7 +58,10 @@ public class ExceptionMiddleware
         }
         else
         {
-            response = new { message };
+            var detail = exception.InnerException != null 
+                ? $"{exception.Message} | Inner: {exception.InnerException.Message}" 
+                : exception.Message;
+            response = new { message = detail };
         }
 
         var json = JsonSerializer.Serialize(response);
