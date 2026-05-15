@@ -40,9 +40,7 @@ public class ExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var message = statusCode == HttpStatusCode.InternalServerError && !_env.IsDevelopment()
-            ? "An unexpected error occurred."
-            : exception.Message;
+        var message = exception.Message;
 
         object response;
         if (exception is BusinessException bizEx)
