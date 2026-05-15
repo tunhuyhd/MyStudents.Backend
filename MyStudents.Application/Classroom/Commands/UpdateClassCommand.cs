@@ -3,6 +3,8 @@ using MyStudents.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using MyStudents.Domain.Entities.Enum;
 using MyStudents.Domain.Entities;
+using MyStudents.Application.Common.Exceptions;
+using MyStudents.Application.Common.Extensions;
 
 namespace MyStudents.Application.Classroom.Commands;
 
@@ -37,6 +39,72 @@ public class UpdateClassCommandHandler(
         // Check if subject exists
         var subject = await context.Subjects.AnyAsync(s => s.Id == command.SubjectId, cancellationToken);
         if (!subject) throw new Exception("Subject not found.");
+
+        // Overlap Check
+        if (command.Schedules != null && command.Schedules.Any())
+        {
+            // 1. Check overlaps within the current request schedules
+            var schedulesList = command.Schedules.ToList();
+            for (int i = 0; i < schedulesList.Count; i++)
+            {
+                var s1 = schedulesList[i];
+                var s1End = s1.StartTime.AddHours((double)s1.DurationHours);
+
+                for (int j = i + 1; j < schedulesList.Count; j++)
+                {
+                    var s2 = schedulesList[j];
+                    var s2End = s2.StartTime.AddHours((double)s2.DurationHours);
+
+                    if (s1.DayOfWeek == s2.DayOfWeek && s1.StartTime < s2End && s2.StartTime < s1End)
+                    {
+                        throw new BusinessException("ERR_INTERNAL_SCHEDULE_OVERLAP", new Dictionary<string, string>
+                        {
+                            { "day", s1.DayOfWeek.ToString() },
+                            { "time1", $"{s1.StartTime:HH:mm}-{s1End:HH:mm}" },
+                            { "time2", $"{s2.StartTime:HH:mm}-{s2End:HH:mm}" }
+                        });
+                    }
+                }
+            }
+
+            // 2. Check overlaps with other existing classes
+            var teacherClasses = await context.Classes
+                .Include(c => c.Schedules)
+                .Where(c => c.Id != command.Id &&
+                           c.TeacherId == userId && 
+                           c.StartDate <= command.ExpectedEndDate && 
+                           c.ExpectedEndDate >= command.StartDate)
+                .ToListAsync(cancellationToken);
+
+            foreach (var newSchedule in command.Schedules)
+            {
+                var newStart = newSchedule.StartTime;
+                var newEnd = newStart.AddHours((double)newSchedule.DurationHours);
+
+                foreach (var existingClass in teacherClasses)
+                {
+                    foreach (var existingSchedule in existingClass.Schedules)
+                    {
+                        if (existingSchedule.DayOfWeek == newSchedule.DayOfWeek)
+                        {
+                            var existingStart = existingSchedule.StartTime;
+                            var existingEnd = existingStart.AddHours((double)existingSchedule.DurationHours);
+
+                            if (newStart < existingEnd && existingStart < newEnd)
+                            {
+                                throw new BusinessException("ERR_SCHEDULE_OVERLAP", new Dictionary<string, string>
+                                {
+                                    { "className", existingClass.Name },
+                                    { "day", newSchedule.DayOfWeek.ToString() },
+                                    { "startTime", existingStart.ToString("HH:mm") },
+                                    { "endTime", existingEnd.ToString("HH:mm") }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         var oldEndDate = entity.ExpectedEndDate;
         entity.Name = command.Name;
