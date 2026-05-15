@@ -37,7 +37,7 @@ public class User : AuditableEntity, IAggregateRoot
     public Role Role { get; set; } = null!;
 
     [Column("status")]
-    public Status Status { get; set; }
+    public Status Status { get; set; } = Status.Active;
     public ICollection<Class> Classes { get; set; } = new List<Class>();
 
 }

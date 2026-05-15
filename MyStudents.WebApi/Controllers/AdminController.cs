@@ -42,4 +42,13 @@ public class AdminController(IMediator mediator) : ControllerBase
         if (!result) return NotFound();
         return Ok();
     }
+
+    [HttpPatch("users/{userId}/status")]
+    public async Task<IActionResult> UpdateStatus(Guid userId, [FromBody] UpdateUserStatusCommand command)
+    {
+        if (userId != command.UserId) return BadRequest();
+        var result = await mediator.Send(command);
+        if (!result) return NotFound();
+        return Ok();
+    }
 }

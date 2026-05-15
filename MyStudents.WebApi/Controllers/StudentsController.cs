@@ -32,4 +32,17 @@ public class StudentsController : BaseApiController
     {
         return await Mediator.Send(new GetStudentByIdQuery(id));
     }
+
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult<Unit>> UpdateStatus(Guid id, UpdateStudentStatusCommand command)
+    {
+        if (id != command.Id) return BadRequest();
+        return await Mediator.Send(command);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<Unit>> Delete(Guid id)
+    {
+        return await Mediator.Send(new DeleteStudentCommand { Id = id });
+    }
 }

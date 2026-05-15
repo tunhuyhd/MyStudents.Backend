@@ -40,6 +40,9 @@ public class Student : AuditableEntity, IAggregateRoot
     [Column("note")]
     public string? Note { get; set; }
 
+    [Column("status")]
+    public Status Status { get; set; } = Status.Active;
+
 	public ICollection<ClassStudent> Classes { get; set; } = new List<ClassStudent>();
 
 	public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();

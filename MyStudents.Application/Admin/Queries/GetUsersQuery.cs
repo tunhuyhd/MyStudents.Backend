@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MyStudents.Application.Common.Interfaces;
+using MyStudents.Domain.Entities.Enum;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace MyStudents.Application.Admin.Queries;
 
 public record GetUsersQuery : IRequest<List<UserDto>>;
 
-public record UserDto(Guid Id, string Username, string Email, string FullName, string RoleName, Guid RoleId);
+public record UserDto(Guid Id, string Username, string Email, string FullName, string RoleName, Guid RoleId, Status Status);
 
 public class GetUsersQueryHandler(IApplicationDbContext context) : IRequestHandler<GetUsersQuery, List<UserDto>>
 {
@@ -26,7 +27,8 @@ public class GetUsersQueryHandler(IApplicationDbContext context) : IRequestHandl
                 u.Email,
                 u.FullName,
                 u.Role.Name,
-                u.RoleId
+                u.RoleId,
+                u.Status
             ))
             .ToListAsync(cancellationToken);
     }
