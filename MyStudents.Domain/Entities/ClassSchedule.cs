@@ -6,6 +6,7 @@ using System.Text;
 
 namespace MyStudents.Domain.Entities;
 
+[Table("class_schedules")]
 public class ClassSchedule : AuditableEntity, IAggregateRoot
 {
 	[Column("class_id")]

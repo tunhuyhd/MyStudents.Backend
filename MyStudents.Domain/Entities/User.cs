@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using MyStudents.Domain.Common;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Domain.Entities;
 
@@ -34,5 +35,9 @@ public class User : AuditableEntity, IAggregateRoot
     public Guid RoleId { get; set; }
 
     public Role Role { get; set; } = null!;
+
+    [Column("status")]
+    public Status Status { get; set; }
     public ICollection<Class> Classes { get; set; } = new List<Class>();
+
 }

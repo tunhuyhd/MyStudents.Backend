@@ -7,6 +7,7 @@ using System.Text;
 
 namespace MyStudents.Domain.Entities;
 
+[Table("class_students")]
 public class ClassStudent : AuditableEntity, IAggregateRoot
 {
 	[Column("class_id")]
