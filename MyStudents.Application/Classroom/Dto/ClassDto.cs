@@ -26,4 +26,5 @@ public class StudentSummaryDto
     public string Email { get; set; } = string.Empty;
     public string StudentIdNumber { get; set; } = string.Empty;
     public StudentClassStatus Status { get; set; }
+    public DateTime JoinedAt { get; set; }
 }

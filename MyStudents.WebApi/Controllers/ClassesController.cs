@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyStudents.Application.Classroom.Commands;
 using MyStudents.Application.Classroom.Queries;
 using MyStudents.Application.Classroom.Dto;
+using MyStudents.Application.Common.Models;
 using MediatR;
 using MyStudents.Domain.Entities.Enum;
 using MyStudents.Application.Students.Dto;
@@ -69,5 +70,11 @@ public class ClassesController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<List<StudentDto>>> GetAvailableStudents(Guid id, string? searchTerm)
     {
         return await mediator.Send(new GetAvailableStudentsForClassQuery { ClassId = id, SearchTerm = searchTerm });
+    }
+
+    [HttpGet("{id}/students")]
+    public async Task<ActionResult<PaginatedList<StudentSummaryDto>>> GetStudents(Guid id, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    {
+        return await mediator.Send(new GetClassStudentsQuery { ClassId = id, PageNumber = pageNumber, PageSize = pageSize });
     }
 }
