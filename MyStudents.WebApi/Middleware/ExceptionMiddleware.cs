@@ -52,6 +52,10 @@ public class ExceptionMiddleware
                 message = bizEx.Message // Fallback
             };
         }
+        if (_env.IsProduction())
+        {
+            response = new { message = "An error occurred while processing your request." };
+        }
         else
         {
             var detail = exception.InnerException != null 

@@ -43,13 +43,7 @@ public class GetClassByIdQueryHandler(
                     StartTime = s.StartTime,
                     DurationHours = s.DurationHours
                 }).ToList(),
-                Students = c.Students.Select(cs => new StudentSummaryDto
-                {
-                    Id = cs.Student.Id,
-                    FullName = cs.Student.LastName + " " + cs.Student.FirstName,
-                    Email = cs.Student.Email,
-                    Status = cs.Status
-                }).ToList(),
+                Students = new(),
                 Sessions = c.Sessions.OrderBy(s => s.OrderIndex).Select(s => new SessionDto
                 {
                     Id = s.Id,
