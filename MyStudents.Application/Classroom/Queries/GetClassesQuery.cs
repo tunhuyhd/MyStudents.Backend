@@ -3,23 +3,49 @@ using MyStudents.Application.Common.Interfaces;
 using MyStudents.Application.Classroom.Dto;
 using Microsoft.EntityFrameworkCore;
 
+using MyStudents.Application.Common.Models;
+
 namespace MyStudents.Application.Classroom.Queries;
 
-public record GetClassesQuery() : IRequest<List<ClassDto>>;
+public record GetClassesQuery : IRequest<PaginatedList<ClassDto>>
+{
+    public string? SearchTerm { get; init; }
+    public int? Year { get; init; }
+    public string? SortBy { get; init; } // e.g., "name", "startDate", "studentCount"
+    public bool SortDescending { get; init; } = true;
+    public int PageNumber { get; init; } = 1;
+    public int PageSize { get; init; } = 10;
+}
 
 public class GetClassesQueryHandler(
     IApplicationDbContext context,
-    ICurrentUserService currentUserService) : IRequestHandler<GetClassesQuery, List<ClassDto>>
+    ICurrentUserService currentUserService) : IRequestHandler<GetClassesQuery, PaginatedList<ClassDto>>
 {
-    public async Task<List<ClassDto>> Handle(GetClassesQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedList<ClassDto>> Handle(GetClassesQuery request, CancellationToken cancellationToken)
     {
         var userId = currentUserService.UserId ?? throw new UnauthorizedAccessException();
 
-        return await context.Classes
+        var query = context.Classes
             .Where(c => c.TeacherId == userId)
-            .Include(c => c.Subject)
-            .Include(c => c.Students)
-            .Include(c => c.Schedules)
+            .AsQueryable();
+
+        // Search
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(searchTerm) || c.Code.ToLower().Contains(searchTerm));
+        }
+
+        // Filter by Year
+        if (request.Year.HasValue)
+        {
+            var startOfYear = new DateOnly(request.Year.Value, 1, 1);
+            var startOfNextYear = startOfYear.AddYears(1);
+            query = query.Where(c => c.StartDate >= startOfYear && c.StartDate < startOfNextYear);
+        }
+
+        // Project
+        var projectedQuery = query
             .Select(c => new ClassDto
             {
                 Id = c.Id,
@@ -39,7 +65,17 @@ public class GetClassesQueryHandler(
                     StartTime = s.StartTime,
                     DurationHours = s.DurationHours
                 }).ToList()
-            })
-            .ToListAsync(cancellationToken);
+            });
+
+        // Sort
+        projectedQuery = request.SortBy?.ToLower() switch
+        {
+            "name" => request.SortDescending ? projectedQuery.OrderByDescending(c => c.Name) : projectedQuery.OrderBy(c => c.Name),
+            "startdate" => request.SortDescending ? projectedQuery.OrderByDescending(c => c.StartDate) : projectedQuery.OrderBy(c => c.StartDate),
+            "studentcount" => request.SortDescending ? projectedQuery.OrderByDescending(c => c.StudentCount) : projectedQuery.OrderBy(c => c.StudentCount),
+            _ => request.SortDescending ? projectedQuery.OrderByDescending(c => c.StartDate) : projectedQuery.OrderBy(c => c.StartDate) // Default sort
+        };
+
+        return await PaginatedList<ClassDto>.CreateAsync(projectedQuery.AsNoTracking(), request.PageNumber, request.PageSize);
     }
 }

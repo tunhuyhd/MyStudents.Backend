@@ -16,9 +16,23 @@ namespace MyStudents.WebApi.Controllers;
 public class ClassesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<ClassDto>>> GetList()
+    public async Task<ActionResult<PaginatedList<ClassDto>>> GetList(
+        [FromQuery] string? searchTerm,
+        [FromQuery] int? year,
+        [FromQuery] string? sortBy,
+        [FromQuery] bool sortDescending = true,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        return await mediator.Send(new GetClassesQuery());
+        return await mediator.Send(new GetClassesQuery 
+        { 
+            SearchTerm = searchTerm,
+            Year = year,
+            SortBy = sortBy,
+            SortDescending = sortDescending,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("{id}")]
