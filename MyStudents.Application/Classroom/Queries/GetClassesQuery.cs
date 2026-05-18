@@ -32,14 +32,14 @@ public class GetClassesQueryHandler(
         // Search
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            var searchPattern = $"%{request.SearchTerm.Trim()}%";
-            query = query.Where(c => EF.Functions.ILike(c.Name, searchPattern) || EF.Functions.ILike(c.Code, searchPattern));
+            var searchTerm = request.SearchTerm.ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(searchTerm) || c.Code.ToLower().Contains(searchTerm));
         }
 
         // Filter by Year
         if (request.Year.HasValue)
         {
-            var startOfYear = new DateTime(request.Year.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var startOfYear = new DateOnly(request.Year.Value, 1, 1);
             var startOfNextYear = startOfYear.AddYears(1);
             query = query.Where(c => c.StartDate >= startOfYear && c.StartDate < startOfNextYear);
         }
