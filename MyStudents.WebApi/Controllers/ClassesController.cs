@@ -1,3 +1,4 @@
+using MyStudents.Application.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyStudents.Application.Classroom.Commands;
