@@ -13,6 +13,7 @@ public class ClassDto
     public string SubjectName { get; set; } = string.Empty;
     public DateOnly StartDate { get; set; }
     public DateOnly ExpectedEndDate { get; set; }
+    public string? LinkOnline { get; set; }
     public int StudentCount { get; set; }
     public List<ClassScheduleDto> Schedules { get; set; } = new();
     public List<StudentSummaryDto> Students { get; set; } = new();

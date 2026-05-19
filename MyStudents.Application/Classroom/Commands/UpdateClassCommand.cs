@@ -17,6 +17,7 @@ public record UpdateClassCommand(
     DateOnly StartDate,
     DateOnly ExpectedEndDate,
     ClassStatus Status,
+    string? LinkOnline = null,
     List<CreateClassScheduleInput>? Schedules = null
 ) : IRequest<Unit>;
 
@@ -114,6 +115,11 @@ public class UpdateClassCommandHandler(
         entity.StartDate = command.StartDate;
         entity.ExpectedEndDate = command.ExpectedEndDate;
         entity.Status = command.Status;
+        entity.LinkOnline = command.Category == CategoryOfClass.Online && !string.IsNullOrWhiteSpace(command.LinkOnline)
+            ? (command.LinkOnline.Trim().StartsWith("http://", StringComparison.OrdinalIgnoreCase) || command.LinkOnline.Trim().StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                ? command.LinkOnline.Trim()
+                : "https://" + command.LinkOnline.Trim())
+            : null;
 
         // Simple sync for schedules: clear and re-add
         entity.Schedules.Clear();

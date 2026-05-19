@@ -35,6 +35,7 @@ public class GetClassByIdQueryHandler(
                 SubjectName = c.Subject.Name,
                 StartDate = c.StartDate,
                 ExpectedEndDate = c.ExpectedEndDate,
+                LinkOnline = c.LinkOnline,
                 StudentCount = c.Students.Count,
                 Schedules = c.Schedules.Select(s => new ClassScheduleDto
                 {

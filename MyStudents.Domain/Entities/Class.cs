@@ -22,6 +22,9 @@ public class Class : AuditableEntity, IAggregateRoot
 	[Column("subject_id")]
 	public Guid SubjectId { get; set; }
 
+	[Column("link_online")]
+	public string? LinkOnline { get; set; }
+
 	public Subject Subject { get; set; } = null!;
 
 	[Column("teacher_id")]

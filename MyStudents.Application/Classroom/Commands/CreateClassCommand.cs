@@ -17,6 +17,7 @@ public record CreateClassCommand(
     Guid SubjectId,
     DateOnly StartDate,
     DateOnly ExpectedEndDate,
+    string? LinkOnline = null,
     List<CreateClassScheduleInput>? Schedules = null
 ) : IRequest<Guid>;
 
@@ -106,7 +107,12 @@ public class CreateClassCommandHandler(
             SubjectId = command.SubjectId,
             TeacherId = userId,
             StartDate = command.StartDate,
-            ExpectedEndDate = command.ExpectedEndDate
+            ExpectedEndDate = command.ExpectedEndDate,
+            LinkOnline = command.Category == CategoryOfClass.Online && !string.IsNullOrWhiteSpace(command.LinkOnline)
+                ? (command.LinkOnline.Trim().StartsWith("http://", StringComparison.OrdinalIgnoreCase) || command.LinkOnline.Trim().StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                    ? command.LinkOnline.Trim()
+                    : "https://" + command.LinkOnline.Trim())
+                : null
         };
 
         if (command.Schedules != null && command.Schedules.Any())
