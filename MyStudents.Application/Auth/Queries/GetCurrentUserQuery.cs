@@ -27,6 +27,6 @@ public class GetCurrentUserQueryHandler(IApplicationDbContext context, ICurrentU
             throw new Exception("User not found.");
         }
 
-        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name);
+        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, user.ImageUrl);
     }
 }

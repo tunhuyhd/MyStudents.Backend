@@ -38,6 +38,10 @@ public class User : AuditableEntity, IAggregateRoot
 
     [Column("status")]
     public Status Status { get; set; } = Status.Active;
+
+    [Column("image_url")]
+    public string? ImageUrl { get; set; }
+
     public ICollection<Class> Classes { get; set; } = new List<Class>();
 
 }

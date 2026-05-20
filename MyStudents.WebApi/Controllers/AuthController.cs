@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyStudents.Application.Auth.Commands;
 using MyStudents.Application.Auth.Dto;
@@ -48,5 +49,32 @@ public class AuthController : BaseApiController
     public async Task<ActionResult<bool>> ChangePassword(ChangePasswordCommand command)
     {
         return await Mediator.Send(command);
+    }
+
+    [HttpPut("avatar")]
+    [Authorize]
+    public async Task<ActionResult<string>> UpdateAvatar(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("File is empty");
+        }
+
+        // Validate size (5MB)
+        if (file.Length > 5 * 1024 * 1024)
+        {
+            return BadRequest("File size exceeds 5MB limit");
+        }
+
+        // Validate file type (must be image)
+        if (!file.ContentType.StartsWith("image/"))
+        {
+            return BadRequest("File is not an image");
+        }
+
+        using var stream = file.OpenReadStream();
+        var command = new UpdateAvatarCommand(stream, file.FileName, file.ContentType);
+        var imageUrl = await Mediator.Send(command);
+        return Ok(new { imageUrl });
     }
 }

@@ -41,6 +41,8 @@ app.MapScalarApiReference(options =>
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
