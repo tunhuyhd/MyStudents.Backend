@@ -53,7 +53,8 @@ public class CloudinaryService : IFileStorageService
         var publicId = fileUrlOrId;
         if (fileUrlOrId.Contains("cloudinary.com"))
         {
-            publicId = ExtractPublicIdFromUrl(fileUrlOrId) ?? fileUrlOrId;
+            var (pid, _) = ExtractCloudinaryInfo(fileUrlOrId);
+            publicId = pid ?? fileUrlOrId;
         }
 
         var deletionParams = new DeletionParams(publicId);
@@ -67,12 +68,13 @@ public class CloudinaryService : IFileStorageService
 
         if (storedUrlOrPath.Contains("cloudinary.com"))
         {
-            var publicId = ExtractPublicIdFromUrl(storedUrlOrPath);
-            if (string.IsNullOrEmpty(publicId)) return storedUrlOrPath;
+            var (publicId, actionType) = ExtractCloudinaryInfo(storedUrlOrPath);
+            if (string.IsNullOrEmpty(publicId) || string.IsNullOrEmpty(actionType)) 
+                return storedUrlOrPath;
 
-            // Generate a signed URL for authenticated delivery
+            // Generate a signed URL for delivery based on the asset's storage type (upload vs authenticated)
             var signedUrl = _cloudinary.Api.UrlImgUp
-                .Action("authenticated")
+                .Action(actionType)
                 .Signed(true)
                 .BuildUrl(publicId);
 
@@ -82,7 +84,7 @@ public class CloudinaryService : IFileStorageService
         return storedUrlOrPath;
     }
 
-    private string? ExtractPublicIdFromUrl(string url)
+    private (string? PublicId, string? ActionType) ExtractCloudinaryInfo(string url)
     {
         try
         {
@@ -90,20 +92,23 @@ public class CloudinaryService : IFileStorageService
             var path = uri.AbsolutePath;
             var segments = path.Split('/');
             
-            // Look for "upload", "authenticated", or "private"
             var uploadIndex = Array.IndexOf(segments, "upload");
+            string actionType = "upload";
+            
             if (uploadIndex == -1)
             {
                 uploadIndex = Array.IndexOf(segments, "authenticated");
+                actionType = "authenticated";
             }
             if (uploadIndex == -1)
             {
                 uploadIndex = Array.IndexOf(segments, "private");
+                actionType = "private";
             }
 
             if (uploadIndex == -1 || segments.Length <= uploadIndex + 2)
             {
-                return null;
+                return (null, null);
             }
 
             // Public ID starts after the version segment (which starts with 'v')
@@ -117,11 +122,13 @@ public class CloudinaryService : IFileStorageService
             var publicIdWithExt = string.Join("/", publicIdSegments);
             
             var dotIndex = publicIdWithExt.LastIndexOf('.');
-            return dotIndex == -1 ? publicIdWithExt : publicIdWithExt[..dotIndex];
+            var publicId = dotIndex == -1 ? publicIdWithExt : publicIdWithExt[..dotIndex];
+            
+            return (publicId, actionType);
         }
         catch
         {
-            return null;
+            return (null, null);
         }
     }
 }
