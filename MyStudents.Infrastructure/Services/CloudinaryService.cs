@@ -93,4 +93,68 @@ public class CloudinaryService : IFileStorageService
         var result = await _cloudinary.DestroyAsync(deletionParams);
         return result.Result == "ok";
     }
+
+    public string GetShareableUrl(string? storedUrlOrPath)
+    {
+        if (string.IsNullOrEmpty(storedUrlOrPath)) return string.Empty;
+
+        // If it starts with /uploads/ or uploads/, it is local storage fallback, return it as-is
+        if (storedUrlOrPath.StartsWith("/uploads/") || storedUrlOrPath.StartsWith("uploads/"))
+        {
+            return storedUrlOrPath;
+        }
+
+        // If it's a full URL containing cloudinary.com, extract the relative path
+        var publicIdWithExt = storedUrlOrPath;
+        if (storedUrlOrPath.Contains("cloudinary.com"))
+        {
+            try
+            {
+                var uri = new Uri(storedUrlOrPath);
+                var path = uri.AbsolutePath;
+                var segments = path.Split('/');
+                
+                var uploadIndex = Array.IndexOf(segments, "upload");
+                if (uploadIndex == -1) uploadIndex = Array.IndexOf(segments, "authenticated");
+                if (uploadIndex == -1) uploadIndex = Array.IndexOf(segments, "private");
+
+                if (uploadIndex != -1 && segments.Length > uploadIndex + 2)
+                {
+                    var versionIndex = uploadIndex + 1;
+                    if (segments[versionIndex].StartsWith('v') && segments.Length > versionIndex + 1)
+                    {
+                        versionIndex++;
+                    }
+                    var publicIdSegments = segments[versionIndex..];
+                    publicIdWithExt = string.Join("/", publicIdSegments);
+                }
+            }
+            catch
+            {
+                // Fallback to original
+            }
+        }
+
+        // Strip the format extension for signing (Cloudinary's BuildUrl expects the public ID without the extension)
+        var publicId = publicIdWithExt;
+        var format = "";
+        var dotIndex = publicIdWithExt.LastIndexOf('.');
+        if (dotIndex != -1)
+        {
+            publicId = publicIdWithExt[..dotIndex];
+            format = publicIdWithExt[(dotIndex + 1)..];
+        }
+
+        // Generate dynamically signed URL
+        var urlBuilder = _cloudinary.Api.UrlImgUp
+            .Action("authenticated")
+            .Signed(true);
+            
+        if (!string.IsNullOrEmpty(format))
+        {
+            urlBuilder = urlBuilder.Format(format);
+        }
+
+        return urlBuilder.BuildUrl(publicId);
+    }
 }
