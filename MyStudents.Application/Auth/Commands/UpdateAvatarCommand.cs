@@ -49,6 +49,6 @@ public class UpdateAvatarCommandHandler(
         user.ImageUrl = imageUrl;
         await context.SaveChangesAsync(cancellationToken);
 
-        return imageUrl;
+        return fileStorageService.GetShareableUrl(imageUrl);
     }
 }

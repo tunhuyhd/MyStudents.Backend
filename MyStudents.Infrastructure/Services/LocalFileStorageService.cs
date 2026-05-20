@@ -74,4 +74,9 @@ public class LocalFileStorageService : IFileStorageService
         }
         return Task.FromResult(false);
     }
+
+    public string GetShareableUrl(string? storedUrlOrPath)
+    {
+        return storedUrlOrPath ?? string.Empty;
+    }
 }
