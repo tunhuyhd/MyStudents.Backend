@@ -9,3 +9,6 @@ appsettings.Development.json
 .vscode/
 *.swp
 *.log
+
+# User Uploads
+**/wwwroot/uploads/

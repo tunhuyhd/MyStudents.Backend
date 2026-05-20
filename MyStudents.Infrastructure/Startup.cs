@@ -8,6 +8,7 @@ using MyStudents.Domain.Common;
 using MyStudents.Infrastructure.Auth;
 using MyStudents.Infrastructure.Persistence.Context;
 using MyStudents.Infrastructure.Persistence.Repositories;
+using MyStudents.Infrastructure.Services;
 using System.Text;
 
 namespace MyStudents.Infrastructure;
@@ -28,6 +29,18 @@ public static class Startup
 
         services.AddScoped(typeof(IRepository<>), typeof(ApplicationDbRepository<>));
         services.AddScoped(typeof(IReadRepository<>), typeof(ApplicationDbRepository<>));
+
+        // File Storage Registration (Local vs Cloudinary)
+        var useLocalStorage = configuration.GetValue<bool>("CloudinarySettings:UseLocalStorage", false);
+        if (useLocalStorage)
+        {
+            services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        }
+        else
+        {
+            services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+            services.AddScoped<IFileStorageService, CloudinaryService>();
+        }
 
         // Auth Services
         services.AddHttpContextAccessor();
