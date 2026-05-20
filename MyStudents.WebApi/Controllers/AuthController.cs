@@ -77,18 +77,4 @@ public class AuthController : BaseApiController
         var imageUrl = await Mediator.Send(command);
         return Ok(new { imageUrl });
     }
-
-    [HttpGet("avatar")]
-    [AllowAnonymous]
-    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any)]
-    public async Task<IActionResult> GetAvatar([FromQuery] Guid userId)
-    {
-        var result = await Mediator.Send(new GetAvatarQuery(userId));
-        if (result == null)
-        {
-            return NotFound("Avatar not found");
-        }
-
-        return File(result.Stream, result.ContentType);
-    }
 }

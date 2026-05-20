@@ -8,5 +8,4 @@ public interface IFileStorageService
 {
     Task<string> UploadAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(string fileUrlOrId, CancellationToken cancellationToken = default);
-    string GetShareableUrl(string? storedUrlOrPath);
 }

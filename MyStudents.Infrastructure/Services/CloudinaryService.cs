@@ -45,90 +45,52 @@ public class CloudinaryService : IFileStorageService
             throw new Exception($"Cloudinary upload failed: {uploadResult.Error.Message}");
         }
 
-        return uploadResult.SecureUrl.ToString();
+        // Return relative path: folder + file name + format extension
+        return $"{uploadResult.PublicId}.{uploadResult.Format}";
     }
 
     public async Task<bool> DeleteAsync(string fileUrlOrId, CancellationToken cancellationToken = default)
     {
         var publicId = fileUrlOrId;
+
+        // If the path contains the full URL, extract the public ID
         if (fileUrlOrId.Contains("cloudinary.com"))
         {
-            var (pid, _) = ExtractCloudinaryInfo(fileUrlOrId);
-            publicId = pid ?? fileUrlOrId;
+            // Fallback parse for old URLs stored in DB
+            var uri = new Uri(fileUrlOrId);
+            var path = uri.AbsolutePath;
+            var segments = path.Split('/');
+            
+            var uploadIndex = Array.IndexOf(segments, "upload");
+            if (uploadIndex == -1) uploadIndex = Array.IndexOf(segments, "authenticated");
+            if (uploadIndex == -1) uploadIndex = Array.IndexOf(segments, "private");
+
+            if (uploadIndex != -1 && segments.Length > uploadIndex + 2)
+            {
+                var versionIndex = uploadIndex + 1;
+                if (segments[versionIndex].StartsWith('v') && segments.Length > versionIndex + 1)
+                {
+                    versionIndex++;
+                }
+                var publicIdSegments = segments[versionIndex..];
+                var publicIdWithExt = string.Join("/", publicIdSegments);
+                var dotIdx = publicIdWithExt.LastIndexOf('.');
+                publicId = dotIdx == -1 ? publicIdWithExt : publicIdWithExt[..dotIdx];
+            }
+        }
+        else
+        {
+            // It is our new relative path (folder + file + format extension)
+            // Strip the extension because Cloudinary's Destroy API expects just the publicId
+            var dotIndex = fileUrlOrId.LastIndexOf('.');
+            if (dotIndex != -1)
+            {
+                publicId = fileUrlOrId[..dotIndex];
+            }
         }
 
         var deletionParams = new DeletionParams(publicId);
         var result = await _cloudinary.DestroyAsync(deletionParams);
         return result.Result == "ok";
-    }
-
-    public string GetShareableUrl(string? storedUrlOrPath)
-    {
-        if (string.IsNullOrEmpty(storedUrlOrPath)) return string.Empty;
-
-        if (storedUrlOrPath.Contains("cloudinary.com"))
-        {
-            var (publicId, actionType) = ExtractCloudinaryInfo(storedUrlOrPath);
-            if (string.IsNullOrEmpty(publicId) || string.IsNullOrEmpty(actionType)) 
-                return storedUrlOrPath;
-
-            // Generate a signed URL for delivery based on the asset's storage type (upload vs authenticated)
-            var signedUrl = _cloudinary.Api.UrlImgUp
-                .Action(actionType)
-                .Signed(true)
-                .BuildUrl(publicId);
-
-            return signedUrl;
-        }
-
-        return storedUrlOrPath;
-    }
-
-    private (string? PublicId, string? ActionType) ExtractCloudinaryInfo(string url)
-    {
-        try
-        {
-            var uri = new Uri(url);
-            var path = uri.AbsolutePath;
-            var segments = path.Split('/');
-            
-            var uploadIndex = Array.IndexOf(segments, "upload");
-            string actionType = "upload";
-            
-            if (uploadIndex == -1)
-            {
-                uploadIndex = Array.IndexOf(segments, "authenticated");
-                actionType = "authenticated";
-            }
-            if (uploadIndex == -1)
-            {
-                uploadIndex = Array.IndexOf(segments, "private");
-                actionType = "private";
-            }
-
-            if (uploadIndex == -1 || segments.Length <= uploadIndex + 2)
-            {
-                return (null, null);
-            }
-
-            // Public ID starts after the version segment (which starts with 'v')
-            var versionIndex = uploadIndex + 1;
-            if (segments[versionIndex].StartsWith('v') && segments.Length > versionIndex + 1)
-            {
-                versionIndex++;
-            }
-
-            var publicIdSegments = segments[versionIndex..];
-            var publicIdWithExt = string.Join("/", publicIdSegments);
-            
-            var dotIndex = publicIdWithExt.LastIndexOf('.');
-            var publicId = dotIndex == -1 ? publicIdWithExt : publicIdWithExt[..dotIndex];
-            
-            return (publicId, actionType);
-        }
-        catch
-        {
-            return (null, null);
-        }
     }
 }

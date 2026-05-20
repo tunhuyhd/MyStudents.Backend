@@ -29,11 +29,6 @@ public class GetCurrentUserQueryHandler(
             throw new Exception("User not found.");
         }
 
-        var version = (user.LastModifiedOn ?? user.CreatedOn).Ticks;
-        var shareableUrl = string.IsNullOrEmpty(user.ImageUrl)
-            ? null
-            : $"/api/v1/auth/avatar?userId={user.Id}&v={version}";
-
-        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, shareableUrl);
+        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, user.ImageUrl);
     }
 }

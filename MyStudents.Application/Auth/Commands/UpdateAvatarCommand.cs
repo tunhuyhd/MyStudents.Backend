@@ -49,7 +49,6 @@ public class UpdateAvatarCommandHandler(
         user.ImageUrl = imageUrl;
         await context.SaveChangesAsync(cancellationToken);
 
-        var version = (user.LastModifiedOn ?? user.CreatedOn).Ticks;
-        return $"/api/v1/auth/avatar?userId={user.Id}&v={version}";
+        return imageUrl;
     }
 }
