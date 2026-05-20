@@ -7,7 +7,9 @@ namespace MyStudents.Application.Auth.Queries;
 
 public record GetCurrentUserQuery : IRequest<UserDto>;
 
-public class GetCurrentUserQueryHandler(IApplicationDbContext context, ICurrentUserService currentUserService) : IRequestHandler<GetCurrentUserQuery, UserDto>
+public class GetCurrentUserQueryHandler(
+    IApplicationDbContext context, 
+    ICurrentUserService currentUserService) : IRequestHandler<GetCurrentUserQuery, UserDto>
 {
     public async Task<UserDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
     {
@@ -27,6 +29,11 @@ public class GetCurrentUserQueryHandler(IApplicationDbContext context, ICurrentU
             throw new Exception("User not found.");
         }
 
-        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, user.ImageUrl);
+        var version = (user.LastModifiedOn ?? user.CreatedOn).Ticks;
+        var shareableUrl = string.IsNullOrEmpty(user.ImageUrl)
+            ? null
+            : $"/api/v1/auth/avatar?userId={user.Id}&v={version}";
+
+        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, shareableUrl);
     }
 }

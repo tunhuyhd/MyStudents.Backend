@@ -34,7 +34,8 @@ public class CloudinaryService : IFileStorageService
         var uploadParams = new ImageUploadParams
         {
             File = new FileDescription(fileName, fileStream),
-            Folder = _settings.Folder
+            Folder = _settings.Folder,
+            Type = "authenticated" // Secure the asset on Cloudinary
         };
 
         var uploadResult = await _cloudinary.UploadAsync(uploadParams, cancellationToken);
@@ -47,10 +48,80 @@ public class CloudinaryService : IFileStorageService
         return uploadResult.SecureUrl.ToString();
     }
 
-    public async Task<bool> DeleteAsync(string publicId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(string fileUrlOrId, CancellationToken cancellationToken = default)
     {
+        var publicId = fileUrlOrId;
+        if (fileUrlOrId.Contains("cloudinary.com"))
+        {
+            publicId = ExtractPublicIdFromUrl(fileUrlOrId) ?? fileUrlOrId;
+        }
+
         var deletionParams = new DeletionParams(publicId);
         var result = await _cloudinary.DestroyAsync(deletionParams);
         return result.Result == "ok";
+    }
+
+    public string GetShareableUrl(string? storedUrlOrPath)
+    {
+        if (string.IsNullOrEmpty(storedUrlOrPath)) return string.Empty;
+
+        if (storedUrlOrPath.Contains("cloudinary.com"))
+        {
+            var publicId = ExtractPublicIdFromUrl(storedUrlOrPath);
+            if (string.IsNullOrEmpty(publicId)) return storedUrlOrPath;
+
+            // Generate a signed URL for authenticated delivery
+            var signedUrl = _cloudinary.Api.UrlImgUp
+                .Action("authenticated")
+                .Signed(true)
+                .BuildUrl(publicId);
+
+            return signedUrl;
+        }
+
+        return storedUrlOrPath;
+    }
+
+    private string? ExtractPublicIdFromUrl(string url)
+    {
+        try
+        {
+            var uri = new Uri(url);
+            var path = uri.AbsolutePath;
+            var segments = path.Split('/');
+            
+            // Look for "upload", "authenticated", or "private"
+            var uploadIndex = Array.IndexOf(segments, "upload");
+            if (uploadIndex == -1)
+            {
+                uploadIndex = Array.IndexOf(segments, "authenticated");
+            }
+            if (uploadIndex == -1)
+            {
+                uploadIndex = Array.IndexOf(segments, "private");
+            }
+
+            if (uploadIndex == -1 || segments.Length <= uploadIndex + 2)
+            {
+                return null;
+            }
+
+            // Public ID starts after the version segment (which starts with 'v')
+            var versionIndex = uploadIndex + 1;
+            if (segments[versionIndex].StartsWith('v') && segments.Length > versionIndex + 1)
+            {
+                versionIndex++;
+            }
+
+            var publicIdSegments = segments[versionIndex..];
+            var publicIdWithExt = string.Join("/", publicIdSegments);
+            
+            var dotIndex = publicIdWithExt.LastIndexOf('.');
+            return dotIndex == -1 ? publicIdWithExt : publicIdWithExt[..dotIndex];
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

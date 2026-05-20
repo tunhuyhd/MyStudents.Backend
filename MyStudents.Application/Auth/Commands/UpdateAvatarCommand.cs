@@ -34,20 +34,7 @@ public class UpdateAvatarCommandHandler(
         {
             try
             {
-                // For local files, we pass the absolute URL to DeleteAsync
-                // For Cloudinary files, we extract the public ID
-                if (user.ImageUrl.Contains("cloudinary.com"))
-                {
-                    var publicId = ExtractPublicIdFromUrl(user.ImageUrl);
-                    if (!string.IsNullOrEmpty(publicId))
-                    {
-                        await fileStorageService.DeleteAsync(publicId, cancellationToken);
-                    }
-                }
-                else
-                {
-                    await fileStorageService.DeleteAsync(user.ImageUrl, cancellationToken);
-                }
+                await fileStorageService.DeleteAsync(user.ImageUrl, cancellationToken);
             }
             catch
             {
@@ -62,39 +49,7 @@ public class UpdateAvatarCommandHandler(
         user.ImageUrl = imageUrl;
         await context.SaveChangesAsync(cancellationToken);
 
-        return imageUrl;
-    }
-
-    private string? ExtractPublicIdFromUrl(string url)
-    {
-        try
-        {
-            var uri = new Uri(url);
-            var path = uri.AbsolutePath; // /demo/image/upload/v1570979139/mystudents/dev/avatars/sample.jpg
-            var segments = path.Split('/');
-            
-            var uploadIndex = Array.IndexOf(segments, "upload");
-            if (uploadIndex == -1 || segments.Length <= uploadIndex + 2)
-            {
-                return null;
-            }
-
-            // Public ID starts after the version segment (which starts with 'v')
-            var versionIndex = uploadIndex + 1;
-            if (segments[versionIndex].StartsWith('v') && segments.Length > versionIndex + 1)
-            {
-                versionIndex++;
-            }
-
-            var publicIdSegments = segments[versionIndex..];
-            var publicIdWithExt = string.Join("/", publicIdSegments);
-            
-            var dotIndex = publicIdWithExt.LastIndexOf('.');
-            return dotIndex == -1 ? publicIdWithExt : publicIdWithExt[..dotIndex];
-        }
-        catch
-        {
-            return null;
-        }
+        var version = (user.LastModifiedOn ?? user.CreatedOn).Ticks;
+        return $"/api/v1/auth/avatar?userId={user.Id}&v={version}";
     }
 }
