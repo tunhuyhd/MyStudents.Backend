@@ -47,8 +47,9 @@ public class UpdateAvatarCommandHandler(
 
         // Update database
         user.ImageUrl = imageUrl;
+        user.LastModifiedOn = DateTime.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
 
-        return fileStorageService.GetShareableUrl(imageUrl);
+        return $"/api/v1/auth/avatar/{user.Id}?v={(user.LastModifiedOn ?? user.CreatedOn).Ticks}";
     }
 }

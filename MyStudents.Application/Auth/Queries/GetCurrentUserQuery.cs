@@ -9,8 +9,7 @@ public record GetCurrentUserQuery : IRequest<UserDto>;
 
 public class GetCurrentUserQueryHandler(
     IApplicationDbContext context, 
-    ICurrentUserService currentUserService,
-    IFileStorageService fileStorageService) : IRequestHandler<GetCurrentUserQuery, UserDto>
+    ICurrentUserService currentUserService) : IRequestHandler<GetCurrentUserQuery, UserDto>
 {
     public async Task<UserDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
     {
@@ -30,7 +29,10 @@ public class GetCurrentUserQueryHandler(
             throw new Exception("User not found.");
         }
 
-        var shareableUrl = fileStorageService.GetShareableUrl(user.ImageUrl);
-        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, shareableUrl);
+        var avatarUrl = string.IsNullOrEmpty(user.ImageUrl) 
+            ? null 
+            : $"/api/v1/auth/avatar/{user.Id}?v={(user.LastModifiedOn ?? user.CreatedOn).Ticks}";
+
+        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, avatarUrl);
     }
 }
