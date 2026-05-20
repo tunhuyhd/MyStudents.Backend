@@ -4,10 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 using MyStudents.Application.Auth.Commands;
 using MyStudents.Application.Auth.Dto;
 using MyStudents.Application.Auth.Queries;
+using MyStudents.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Net.Http;
 
 namespace MyStudents.WebApi.Controllers;
 
-public class AuthController : BaseApiController
+public class AuthController(
+    IFileStorageService fileStorageService,
+    IApplicationDbContext context,
+    IWebHostEnvironment environment) : BaseApiController
 {
     [HttpPost("login")]
     [AllowAnonymous]
@@ -76,5 +83,72 @@ public class AuthController : BaseApiController
         var command = new UpdateAvatarCommand(stream, file.FileName, file.ContentType);
         var imageUrl = await Mediator.Send(command);
         return Ok(new { imageUrl });
+    }
+
+    private static readonly HttpClient _httpClient = new();
+
+    [HttpGet("avatar/{userId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAvatar(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await context.Users.FindAsync([userId], cancellationToken);
+        if (user == null || string.IsNullOrEmpty(user.ImageUrl))
+        {
+            return NotFound("User or avatar not found.");
+        }
+
+        // 1. If it's a local storage path
+        if (user.ImageUrl.StartsWith("/uploads/") || user.ImageUrl.StartsWith("uploads/"))
+        {
+            var wwwrootPath = environment.WebRootPath;
+            if (string.IsNullOrEmpty(wwwrootPath))
+            {
+                wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+            var physicalPath = Path.Combine(wwwrootPath, user.ImageUrl.TrimStart('/'));
+            if (!System.IO.File.Exists(physicalPath))
+            {
+                return NotFound("Local avatar file not found.");
+            }
+
+            var stream = new FileStream(physicalPath, FileMode.Open, FileAccess.Read);
+            var contentType = GetContentType(physicalPath);
+            Response.Headers.CacheControl = "public, max-age=86400"; // 1 day cache
+            return File(stream, contentType);
+        }
+
+        // 2. If it's stored on Cloudinary
+        try
+        {
+            var signedUrl = fileStorageService.GetShareableUrl(user.ImageUrl);
+            var response = await _httpClient.GetAsync(signedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode, "Failed to retrieve avatar from Cloudinary.");
+            }
+
+            var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg";
+            Response.Headers.CacheControl = "public, max-age=86400"; // 1 day cache
+            return File(responseStream, contentType);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error retrieving avatar: {ex.Message}");
+        }
+    }
+
+    private static string GetContentType(string path)
+    {
+        var ext = Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 }
