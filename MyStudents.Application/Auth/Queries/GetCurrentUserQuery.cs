@@ -29,6 +29,41 @@ public class GetCurrentUserQueryHandler(
             throw new Exception("User not found.");
         }
 
-        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, user.ImageUrl);
+        return new UserDto(user.Id, user.Username, user.Email, user.FullName, user.Role.Name, GetRelativeCloudinaryPath(user.ImageUrl));
+    }
+
+    private static string? GetRelativeCloudinaryPath(string? url)
+    {
+        if (string.IsNullOrEmpty(url)) return url;
+        
+        if (url.Contains("cloudinary.com"))
+        {
+            try
+            {
+                var uri = new Uri(url);
+                var path = uri.AbsolutePath;
+                var segments = path.Split('/');
+                
+                var uploadIndex = Array.IndexOf(segments, "upload");
+                if (uploadIndex == -1) uploadIndex = Array.IndexOf(segments, "authenticated");
+                if (uploadIndex == -1) uploadIndex = Array.IndexOf(segments, "private");
+
+                if (uploadIndex != -1 && segments.Length > uploadIndex + 2)
+                {
+                    var versionIndex = uploadIndex + 1;
+                    if (segments[versionIndex].StartsWith('v') && segments.Length > versionIndex + 1)
+                    {
+                        versionIndex++;
+                    }
+                    var publicIdSegments = segments[versionIndex..];
+                    return string.Join("/", publicIdSegments);
+                }
+            }
+            catch
+            {
+                // Fallback to original if parsing fails
+            }
+        }
+        return url;
     }
 }
