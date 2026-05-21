@@ -15,6 +15,7 @@ public class UpdateProfileCommandHandler(
         var userId = currentUserService.UserId;
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         
+        
         if (user == null) return false;
 
         user.FullName = request.FullName;
