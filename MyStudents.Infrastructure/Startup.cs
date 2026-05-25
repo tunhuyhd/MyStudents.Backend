@@ -47,6 +47,7 @@ public static class Startup
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
 
         // JWT Authentication
         services.AddAuthentication(options =>

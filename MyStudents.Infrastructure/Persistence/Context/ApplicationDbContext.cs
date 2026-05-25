@@ -32,6 +32,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 	public DbSet<ClassStudent> ClassStudents => Set<ClassStudent>();
 
 	public DbSet<Attendance> Attendances => Set<Attendance>();
+	public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +57,18 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure PasswordResetToken
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.Property(e => e.TokenHash).HasMaxLength(64).IsRequired();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Seed Data

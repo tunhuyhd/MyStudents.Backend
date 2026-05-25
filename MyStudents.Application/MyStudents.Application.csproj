@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\MyStudents.Domain\MyStudents.Domain.csproj" />
@@ -9,6 +9,7 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="*" />
     <PackageReference Include="MediatR" Version="*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="*" />
   </ItemGroup>
 
   <ItemGroup>

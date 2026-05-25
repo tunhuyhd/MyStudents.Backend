@@ -58,6 +58,42 @@ public class AuthController(
         return await Mediator.Send(command);
     }
 
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> ForgotPassword(ForgotPasswordRequest request)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        await Mediator.Send(new ForgotPasswordCommand(request.Email, ipAddress));
+        return Ok(new { message = "Nếu tài khoản tồn tại, email hướng dẫn đã được gửi." });
+    }
+
+    [HttpGet("reset-password/validate")]
+    [AllowAnonymous]
+    public async Task<ActionResult<bool>> ValidateResetToken([FromQuery] string token)
+    {
+        var result = await Mediator.Send(new ValidateResetTokenQuery(token));
+        if (!result)
+        {
+            return BadRequest(new { message = "Liên kết đặt lại mật khẩu đã hết hạn hoặc không hợp lệ." });
+        }
+        return Ok(result);
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult<bool>> ResetPassword(ResetPasswordRequest request)
+    {
+        try
+        {
+            var result = await Mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPut("avatar")]
     [Authorize]
     public async Task<ActionResult<string>> UpdateAvatar(IFormFile file)

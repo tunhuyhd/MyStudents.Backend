@@ -14,6 +14,7 @@ public interface IApplicationDbContext
     DbSet<ClassSession> ClassSessions { get; }
     DbSet<ClassStudent> ClassStudents { get; }
     DbSet<Attendance> Attendances { get; }
+    DbSet<PasswordResetToken> PasswordResetTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

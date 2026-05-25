@@ -9,3 +9,7 @@ public record RefreshTokenRequest(string AccessToken, string RefreshToken);
 public record AuthResponse(string Token, string RefreshToken, string Username, string Role, Guid UserId);
 
 public record UserDto(Guid Id, string Username, string Email, string FullName, string Role, string? ImageUrl);
+
+public record ForgotPasswordRequest(string Email);
+
+public record ResetPasswordRequest(string Token, string NewPassword);

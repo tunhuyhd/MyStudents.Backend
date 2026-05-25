@@ -7,7 +7,7 @@ namespace MyStudents.Application.Auth.Commands;
 public record UpdateProfileCommand(string FullName, string Email) : IRequest<bool>;
 
 public class UpdateProfileCommandHandler(
-    IApplicationDbContext context, 
+    IApplicationDbContext context,
     ICurrentUserService currentUserService) : IRequestHandler<UpdateProfileCommand, bool>
 {
     public async Task<bool> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
