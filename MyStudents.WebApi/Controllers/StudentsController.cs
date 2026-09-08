@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyStudents.Application.Students.Commands;
 using MyStudents.Application.Students.Queries;
@@ -6,6 +7,7 @@ using MediatR;
 
 namespace MyStudents.WebApi.Controllers;
 
+[Authorize]
 public class StudentsController : BaseApiController
 {
     [HttpPost]

@@ -28,6 +28,14 @@ public class ExceptionMiddleware
             _logger.LogWarning("Business Rule Violation: Schedule Conflict Detected.");
             await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
         }
+        catch (NotFoundException ex)
+        {
+            await HandleExceptionAsync(context, ex, HttpStatusCode.NotFound);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            await HandleExceptionAsync(context, ex, HttpStatusCode.Unauthorized);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled Exception: {Message}", ex.Message);

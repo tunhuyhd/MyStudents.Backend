@@ -1,3 +1,4 @@
+using MyStudents.Application.Common.Exceptions;
 using MediatR;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Application.Students.Dto;
@@ -16,6 +17,9 @@ public class GetAvailableStudentsForClassQueryHandler(IApplicationDbContext cont
 {
     public async Task<List<StudentDto>> Handle(GetAvailableStudentsForClassQuery request, CancellationToken cancellationToken)
     {
+        if (!await context.Classes.AnyAsync(c => c.Id == request.ClassId, cancellationToken))
+            throw new NotFoundException("Class", request.ClassId);
+
         var query = context.Students
             .AsNoTracking()
             .Where(s => !context.ClassStudents.Any(cs => cs.ClassId == request.ClassId && cs.StudentId == s.Id));

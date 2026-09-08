@@ -108,6 +108,23 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                     v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc)));
             }
         }
+        // Scope every access path, including navigation queries, to the authenticated owner.
+        // Keep soft deletion in these filters because HasQueryFilter replaces the earlier filter.
+        modelBuilder.Entity<Student>().HasQueryFilter(e => !e.IsDeleted &&
+            _currentUserService.IsAuthenticated && e.CreatedBy == _currentUserService.UserId);
+        modelBuilder.Entity<Class>().HasQueryFilter(e => !e.IsDeleted &&
+            _currentUserService.IsAuthenticated && e.TeacherId == _currentUserService.UserId);
+        modelBuilder.Entity<ClassSchedule>().HasQueryFilter(e => !e.IsDeleted &&
+            _currentUserService.IsAuthenticated && e.Class.TeacherId == _currentUserService.UserId && !e.Class.IsDeleted);
+        modelBuilder.Entity<ClassSession>().HasQueryFilter(e => !e.IsDeleted &&
+            _currentUserService.IsAuthenticated && e.Class.TeacherId == _currentUserService.UserId && !e.Class.IsDeleted);
+        modelBuilder.Entity<ClassStudent>().HasQueryFilter(e => !e.IsDeleted &&
+            _currentUserService.IsAuthenticated && e.Class.TeacherId == _currentUserService.UserId &&
+            !e.Class.IsDeleted && e.Student.CreatedBy == _currentUserService.UserId && !e.Student.IsDeleted);
+        modelBuilder.Entity<Attendance>().HasQueryFilter(e => !e.IsDeleted &&
+            _currentUserService.IsAuthenticated && e.Session.Class.TeacherId == _currentUserService.UserId &&
+            !e.Session.IsDeleted && !e.Session.Class.IsDeleted &&
+            e.Student.CreatedBy == _currentUserService.UserId && !e.Student.IsDeleted);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

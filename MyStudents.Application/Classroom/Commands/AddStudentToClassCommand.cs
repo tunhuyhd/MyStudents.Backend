@@ -1,3 +1,4 @@
+using MyStudents.Application.Common.Exceptions;
 using MediatR;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Domain.Entities;
@@ -16,6 +17,12 @@ public class AddStudentToClassCommandHandler(IApplicationDbContext context) : IR
 {
     public async Task<bool> Handle(AddStudentToClassCommand request, CancellationToken cancellationToken)
     {
+        if (!await context.Classes.AnyAsync(c => c.Id == request.ClassId, cancellationToken))
+            throw new NotFoundException("Class", request.ClassId);
+
+        if (!await context.Students.AnyAsync(s => s.Id == request.StudentId, cancellationToken))
+            throw new NotFoundException("Student", request.StudentId);
+
         // Check if already exists
         var exists = await context.ClassStudents
             .AnyAsync(x => x.ClassId == request.ClassId && x.StudentId == request.StudentId, cancellationToken);

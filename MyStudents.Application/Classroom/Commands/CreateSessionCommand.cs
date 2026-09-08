@@ -1,3 +1,4 @@
+using MyStudents.Application.Common.Exceptions;
 using MediatR;
 using MyStudents.Application.Common.Interfaces;
 using MyStudents.Domain.Entities;
@@ -19,6 +20,9 @@ public class CreateSessionCommandHandler(IApplicationDbContext context) : IReque
 {
     public async Task<Guid> Handle(CreateSessionCommand request, CancellationToken cancellationToken)
     {
+        if (!await context.Classes.AnyAsync(c => c.Id == request.ClassId, cancellationToken))
+            throw new NotFoundException("Class", request.ClassId);
+
         var session = new ClassSession
         {
             ClassId = request.ClassId,
