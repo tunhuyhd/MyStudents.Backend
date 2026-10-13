@@ -25,7 +25,7 @@ public class ExceptionMiddleware
         }
         catch (BusinessException ex)
         {
-            _logger.LogWarning("Business Rule Violation: Schedule Conflict Detected.");
+            _logger.LogWarning("Business rule violation: {ErrorCode}", ex.ErrorCode);
             await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
         }
         catch (NotFoundException ex)
@@ -35,6 +35,19 @@ public class ExceptionMiddleware
         catch (UnauthorizedAccessException ex)
         {
             await HandleExceptionAsync(context, ex, HttpStatusCode.Unauthorized);
+        }
+        catch (ForbiddenException ex)
+        {
+            await HandleExceptionAsync(context, ex, HttpStatusCode.Forbidden);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        {
+            await HandleExceptionAsync(context, ex, HttpStatusCode.Conflict);
+        }
+        catch (Exception ex) when (ex is Npgsql.PostgresException { SqlState: "40001" } ||
+                                   ex.InnerException is Npgsql.PostgresException { SqlState: "40001" })
+        {
+            await HandleExceptionAsync(context, ex, HttpStatusCode.Conflict);
         }
         catch (Exception ex)
         {

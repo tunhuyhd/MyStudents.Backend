@@ -17,7 +17,7 @@ namespace MyStudents.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -624,6 +624,7 @@ namespace MyStudents.Infrastructure.Migrations
                         .HasColumnName("password_hash");
 
                     b.Property<string>("RefreshToken")
+                        .IsConcurrencyToken()
                         .HasColumnType("text")
                         .HasColumnName("refresh_token");
 
@@ -638,6 +639,11 @@ namespace MyStudents.Infrastructure.Migrations
                     b.Property<string>("Salt")
                         .HasColumnType("text")
                         .HasColumnName("salt");
+
+                    b.Property<Guid>("SecurityStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("security_stamp");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer")
@@ -672,9 +678,10 @@ namespace MyStudents.Infrastructure.Migrations
                             IsDeleted = false,
                             IsEmailVerified = true,
                             LastModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            PasswordHash = "$2a$11$4HIlo6ImhI/LAIXHPdIxT.YkGP.2YaLGgUbLKOtU4mkL75hRu/1v2",
+                            PasswordHash = "",
                             RoleId = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Status = 1,
+                            SecurityStamp = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Status = 2,
                             Username = "admin"
                         });
                 });

@@ -22,9 +22,9 @@ public class AdminLoginCommandHandler(
             .FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
 
         // Kiểm tra user tồn tại VÀ phải có quyền Admin (không phân biệt hoa thường)
-        if (user == null || !string.Equals(user.Role.Name, UserRoles.Admin, System.StringComparison.OrdinalIgnoreCase) || !passwordHasher.Verify(request.Password, user.PasswordHash))
+        if (user == null || user.Status != MyStudents.Domain.Entities.Enum.Status.Active || !string.Equals(user.Role.Name, UserRoles.Admin, System.StringComparison.OrdinalIgnoreCase) || !passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            throw new System.Exception("Invalid admin credentials.");
+            throw new UnauthorizedAccessException("Invalid admin credentials.");
         }
 
         var token = jwtService.GenerateToken(user);

@@ -16,4 +16,6 @@ public interface IApplicationDbContext
     DbSet<Attendance> Attendances { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
+        System.Data.IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
 }

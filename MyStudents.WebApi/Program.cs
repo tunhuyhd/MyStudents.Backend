@@ -25,6 +25,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+if (args.Contains("--bootstrap-admin"))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var password = Environment.GetEnvironmentVariable("MYSTUDENTS_BOOTSTRAP_ADMIN_PASSWORD") ?? string.Empty;
+    await scope.ServiceProvider.GetRequiredService<MyStudents.Infrastructure.Auth.AdminBootstrapper>()
+        .InitializeAsync(password);
+    app.Logger.LogInformation("Administrator initialized. Remove the bootstrap password from the environment.");
+    return;
+}
+
 app.UseCors("AllowAll"); // Move to top
 
 app.UseMiddleware<ExceptionMiddleware>();
@@ -49,3 +59,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

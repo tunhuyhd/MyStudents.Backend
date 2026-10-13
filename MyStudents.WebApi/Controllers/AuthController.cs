@@ -44,6 +44,14 @@ public class AuthController(
         return await Mediator.Send(new GetCurrentUserQuery());
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        await Mediator.Send(new LogoutCommand());
+        return NoContent();
+    }
+
     [HttpPut("profile")]
     [Authorize]
     public async Task<ActionResult<bool>> UpdateProfile(UpdateProfileCommand command)

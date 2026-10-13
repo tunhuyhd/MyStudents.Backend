@@ -12,14 +12,17 @@ public class RefreshTokenCommandHandler(IApplicationDbContext context, IJwtServi
     public async Task<AuthResponse> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
     {
         var request = command.Request;
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
         var user = await context.Users
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken, cancellationToken);
 
-        if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        if (user == null || user.Status != MyStudents.Domain.Entities.Enum.Status.Active ||
+            !user.RefreshTokenExpiryTime.HasValue || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
-            throw new Exception("Invalid or expired refresh token.");
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
         }
 
         // Generate new tokens

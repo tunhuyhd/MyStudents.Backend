@@ -77,7 +77,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 FullName = "System Administrator",
                 IsEmailVerified = true,
                 RoleId = adminRoleId,
-                PasswordHash = "$2a$11$4HIlo6ImhI/LAIXHPdIxT.YkGP.2YaLGgUbLKOtU4mkL75hRu/1v2", // Hash chuẩn xác 100% của 'admin123'
+                PasswordHash = string.Empty,
+                Status = MyStudents.Domain.Entities.Enum.Status.Inactive,
+                SecurityStamp = Guid.Empty,
                 CreatedBy = Guid.Empty,
                 LastModifiedBy = Guid.Empty,
                 CreatedOn = fixedDate
@@ -126,6 +128,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             !e.Session.IsDeleted && !e.Session.Class.IsDeleted &&
             e.Student.CreatedBy == _currentUserService.UserId && !e.Student.IsDeleted);
     }
+
+    public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
+        System.Data.IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+        => Database.BeginTransactionAsync(isolationLevel, cancellationToken);
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

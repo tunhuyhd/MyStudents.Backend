@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace MyStudents.WebApi.Controllers;
 
 [ApiController]
+[Authorize(Roles = UserRoles.Admin)]
 [Route("api/v1/admin")]
 public class AdminController(IMediator mediator) : ControllerBase
 {

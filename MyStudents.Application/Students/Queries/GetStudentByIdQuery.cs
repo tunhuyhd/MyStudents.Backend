@@ -36,7 +36,7 @@ public class GetStudentByIdQueryHandler(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (entity == null)
-            throw new Exception("Student not found or you don't have permission to view it.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Student", request.Id);
 
         return entity;
     }

@@ -10,6 +10,8 @@ using MyStudents.Infrastructure.Persistence.Context;
 using MyStudents.Infrastructure.Persistence.Repositories;
 using MyStudents.Infrastructure.Services;
 using System.Text;
+using System.Security.Claims;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Infrastructure;
 
@@ -47,6 +49,7 @@ public static class Startup
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<AdminBootstrapper>();
 
         // JWT Authentication
         services.AddAuthentication(options =>
@@ -65,6 +68,26 @@ public static class Startup
                 ValidIssuer = configuration["JwtSettings:Issuer"],
                 ValidAudience = configuration["JwtSettings:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Key"]!))
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async tokenContext =>
+                {
+                    var principal = tokenContext.Principal;
+                    if (!Guid.TryParse(principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ||
+                        !Guid.TryParse(principal?.FindFirstValue("security_stamp"), out var stamp))
+                    {
+                        tokenContext.Fail("Invalid session.");
+                        return;
+                    }
+
+                    var db = tokenContext.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+                    var user = await db.Users.AsNoTracking().Include(u => u.Role)
+                        .SingleOrDefaultAsync(u => u.Id == userId, tokenContext.HttpContext.RequestAborted);
+                    if (user == null || user.Status != Status.Active || user.SecurityStamp != stamp ||
+                        user.Role.Name != principal!.FindFirstValue(ClaimTypes.Role))
+                        tokenContext.Fail("Session revoked.");
+                }
             };
         });
 

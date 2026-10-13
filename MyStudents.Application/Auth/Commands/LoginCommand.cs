@@ -19,9 +19,9 @@ public class LoginCommandHandler(
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
 
-        if (user == null || string.Equals(user.Role.Name, UserRoles.Admin, StringComparison.OrdinalIgnoreCase) || !passwordHasher.Verify(request.Password, user.PasswordHash))
+        if (user == null || user.Status != MyStudents.Domain.Entities.Enum.Status.Active || string.Equals(user.Role.Name, UserRoles.Admin, StringComparison.OrdinalIgnoreCase) || !passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            throw new Exception("Invalid username or password.");
+            throw new UnauthorizedAccessException("Invalid username or password.");
         }
 
         var token = jwtService.GenerateToken(user);

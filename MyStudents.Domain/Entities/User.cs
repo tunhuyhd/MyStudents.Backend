@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using MyStudents.Domain.Common;
 using MyStudents.Domain.Entities.Enum;
 
@@ -26,7 +27,19 @@ public class User : AuditableEntity, IAggregateRoot
     public string FullName { get; set; } = string.Empty;
 
     [Column("refresh_token")]
+    [ConcurrencyCheck]
     public string? RefreshToken { get; set; }
+
+    [Column("security_stamp")]
+    [ConcurrencyCheck]
+    public Guid SecurityStamp { get; set; } = Guid.NewGuid();
+
+    public void RevokeSessions()
+    {
+        SecurityStamp = Guid.NewGuid();
+        RefreshToken = null;
+        RefreshTokenExpiryTime = null;
+    }
 
     [Column("refresh_token_expiry_time")]
     public DateTime? RefreshTokenExpiryTime { get; set; }

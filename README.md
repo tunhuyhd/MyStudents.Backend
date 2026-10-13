@@ -44,6 +44,10 @@ dotnet ef migrations list -p MyStudents.Infrastructure -s MyStudents.WebApi
 - **MyStudents.Infrastructure**: Chứa cấu hình Database (EF Core, Context, Migrations).
 - **MyStudents.Domain**: Chứa các thực thể (Entities), hằng số (Constants) và Interfaces cốt lõi.
 
-## 🔑 Tài khoản Admin mặc định
-- **Username**: `admin`
-- **Password**: `admin123`
+## Bảo mật và tài khoản quản trị
+
+Không còn tài khoản admin hoạt động với mật khẩu mặc định. Xem [SECURITY_UPGRADE.md](SECURITY_UPGRADE.md) để áp dụng migration và khởi tạo admin bằng mật khẩu riêng.
+
+## Automation test
+
+Xem [hướng dẫn chạy test](tests/MyStudents.AutomationTests/README.md). Chạy `dotnet test MyStudents.slnx` từ thư mục backend.
