@@ -3,6 +3,7 @@
   <Project Path="MyStudents.Domain/MyStudents.Domain.csproj" />
   <Project Path="MyStudents.Infrastructure/MyStudents.Infrastructure.csproj" />
   <Project Path="MyStudents.WebApi/MyStudents.WebApi.csproj" />
+  <Project Path="MyStudents.PagedAutomationTests/MyStudents.PagedAutomationTests.csproj" />
   <Folder Name="/tests/">
     <Project Path="tests/MyStudents.AutomationTests/MyStudents.AutomationTests.csproj" />
   </Folder>

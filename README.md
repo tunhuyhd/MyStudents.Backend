@@ -25,19 +25,19 @@ Tạo migration bằng `dotnet ef migrations add <MigrationName> -p MyStudents.I
 
 ## Docker Compose
 
-Sao chép `.env.example` thành `.env`, đặt `POSTGRES_PASSWORD` mạnh, rồi chạy:
+Sao chép `.env.example` thành `.env`, đặt `POSTGRES_PASSWORD` mạnh và `JWT_SIGNING_KEY` ngẫu nhiên tối thiểu 32 ký tự, rồi chạy:
 
 ```powershell
 docker compose up --build -d
 ```
 
-API lắng nghe cổng `8080`; PostgreSQL lắng nghe cổng `5432`. Chạy migration từ máy host với connection string trỏ tới `localhost:5432` trước khi dùng API. Compose dùng root `Dockerfile` làm cấu hình build duy nhất.
+API lắng nghe cổng `8080` (đặt `NEXT_PUBLIC_API_URL=http://localhost:8080` cho frontend); PostgreSQL lắng nghe cổng `5432`. Chạy migration từ máy host với connection string trỏ tới `localhost:5432` trước khi dùng API. Compose dùng root `Dockerfile` làm cấu hình build duy nhất.
 
 ## Kiểm thử và CI
 
 ```powershell
 dotnet build MyStudents.slnx --configuration Release
-dotnet test tests/MyStudents.AutomationTests/MyStudents.AutomationTests.csproj --configuration Release
+dotnet test MyStudents.slnx --configuration Release
 ```
 
 CI GitHub Actions build và chạy bộ automation tests trên .NET 10. Không commit `.env`, thông tin đăng nhập, JWT key hoặc khóa dịch vụ.

@@ -9,6 +9,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=mystudents.db;Database=MyStudents;Username=${POSTGRES_USER:-mystudents};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      JwtSettings__Key: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
     depends_on:
       mystudents.db:

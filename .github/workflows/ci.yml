@@ -16,4 +16,4 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet build MyStudents.slnx --configuration Release
-      - run: dotnet test tests/MyStudents.AutomationTests/MyStudents.AutomationTests.csproj --configuration Release --no-build
+      - run: dotnet test MyStudents.slnx --configuration Release --no-build
