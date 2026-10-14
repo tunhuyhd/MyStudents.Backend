@@ -31,6 +31,7 @@ public class GetStudentByIdQueryHandler(
                 Phone = s.Phone,
                 Address = s.Address,
                 Note = s.Note,
+                Status = s.Status,
                 CreatedOn = s.CreatedOn
             })
             .FirstOrDefaultAsync(cancellationToken);

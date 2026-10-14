@@ -27,12 +27,12 @@ public class PaginatedList<T>
 
     public bool HasNextPage => PageNumber < TotalPages;
 
-    public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize)
+    public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
         if (pageNumber < 1 || pageNumber > 1000000 || pageSize < 1 || pageSize > 100)
             throw new MyStudents.Application.Common.Exceptions.BusinessException("ERR_INVALID_PAGINATION");
-        var count = await source.CountAsync();
-        var items = await source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+        var count = await source.CountAsync(cancellationToken);
+        var items = await source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
         return new PaginatedList<T>(items, count, pageNumber, pageSize);
     }

@@ -4,6 +4,8 @@ using MyStudents.Application.Students.Commands;
 using MyStudents.Application.Students.Queries;
 using MyStudents.Application.Students.Dto;
 using MediatR;
+using MyStudents.Application.Common.Models;
+using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.WebApi.Controllers;
 
@@ -23,10 +25,28 @@ public class StudentsController : BaseApiController
         return await Mediator.Send(command);
     }
 
+    // Keep the original list response for existing clients during migration to the paged endpoint.
     [HttpGet]
     public async Task<ActionResult<List<StudentDto>>> GetList()
     {
-        return await Mediator.Send(new GetStudentsQuery());
+        var page = await Mediator.Send(new GetStudentsQuery(PageSize: 100));
+        var students = new List<StudentDto>(page.Items);
+        for (var pageNumber = 2; pageNumber <= page.TotalPages; pageNumber++)
+        {
+            page = await Mediator.Send(new GetStudentsQuery(PageNumber: pageNumber, PageSize: 100));
+            students.AddRange(page.Items);
+        }
+        return students;
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<PaginatedList<StudentDto>>> GetPagedList(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 12,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] Status? status = null)
+    {
+        return await Mediator.Send(new GetStudentsQuery(pageNumber, pageSize, searchTerm, status));
     }
 
     [HttpGet("{id}")]

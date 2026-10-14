@@ -158,6 +158,16 @@ public class GetClassStudentsQueryValidator : AbstractValidator<GetClassStudents
 {
     public GetClassStudentsQueryValidator() { RuleFor(x => x.ClassId).NotEmpty(); RuleFor(x => x.PageNumber).InclusiveBetween(1, 1000000); RuleFor(x => x.PageSize).InclusiveBetween(1, 100); }
 }
+public class GetStudentsQueryValidator : AbstractValidator<MyStudents.Application.Students.Queries.GetStudentsQuery>
+{
+    public GetStudentsQueryValidator()
+    {
+        RuleFor(x => x.PageNumber).InclusiveBetween(1, 1000000);
+        RuleFor(x => x.PageSize).InclusiveBetween(1, 100);
+        RuleFor(x => x.SearchTerm).MaximumLength(200);
+        RuleFor(x => x.Status).IsInEnum().When(x => x.Status.HasValue);
+    }
+}
 public class CreateSubjectCommandValidator : AbstractValidator<CreateSubjectCommand>
 {
     public CreateSubjectCommandValidator() { RuleFor(x => x.Name).NotEmpty().MaximumLength(200); RuleFor(x => x.Description).MaximumLength(2000); }

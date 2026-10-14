@@ -37,12 +37,16 @@ builder.Services.AddRateLimiter(options =>
 });
 builder.Services.AddOpenApi(); // Built-in OpenAPI .NET 10
 
-// Configure CORS
+// Only allow explicitly configured frontend origins. Development keeps the local Next.js origin usable.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
+    allowedOrigins = ["http://localhost:3000", "https://localhost:3000"];
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("Frontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -60,7 +64,7 @@ if (args.Contains("--bootstrap-admin"))
     return;
 }
 
-app.UseCors("AllowAll"); // Move to top
+app.UseCors("Frontend");
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseStatusCodePages(async statusContext =>
@@ -77,14 +81,16 @@ app.UseStatusCodePages(async statusContext =>
 });
 
 // Configure the HTTP request pipeline.
-// Enable API documentation in all environments for better debugging during staging
-app.MapOpenApi();
-app.MapScalarApiReference(options =>
+if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("ApiDocs:Enabled"))
 {
-    options.WithTitle("MyStudents API")
-           .WithTheme(ScalarTheme.Moon)
-           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-});
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("MyStudents API")
+               .WithTheme(ScalarTheme.Moon)
+               .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
+}
 
 app.UseHttpsRedirection();
 

@@ -1,53 +1,43 @@
-# MyStudents - Backend (Private Tutoring Management)
+# MyStudents Backend
 
-Hệ thống quản lý lớp học dành cho giáo viên, được xây dựng trên nền tảng .NET Core 10.
+REST API cho ứng dụng quản lý học sinh/lớp học, xây dựng bằng .NET 10 và PostgreSQL.
 
-## 🛠 Hướng dẫn về Database (Entity Framework Core)
+## Chạy local
 
-Mọi thao tác thay đổi cấu trúc Database phải được thực hiện thông qua **EF Core Migrations**. Đảm bảo bạn đã cài đặt công cụ bằng lệnh: `dotnet tool install --global dotnet-ef`
-
-### 1. Tạo Migration mới
-Sử dụng lệnh này sau khi bạn thay đổi các lớp Entity trong dự án `MyStudents.Domain`.
+Yêu cầu .NET SDK 10 và PostgreSQL 16+. Tạo database `MyStudents`, sau đó đặt connection string qua biến môi trường để không lưu thông tin đăng nhập trong source:
 
 ```powershell
-dotnet ef migrations add <MigrationName> -p MyStudents.Infrastructure -s MyStudents.WebApi
-```
-*Lưu ý: Thay `<MigrationName>` bằng tên mô tả thay đổi (ví dụ: `AddClassTable`, `UpdateUserField`).*
-
-### 2. Cập nhật Database
-Áp dụng các Migration chưa chạy vào Database thực tế.
-
-```powershell
+$env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5432;Database=MyStudents;Username=<user>;Password=<password>"
+$env:JwtSettings__Key = "<secret-at-least-32-characters>"
 dotnet ef database update -p MyStudents.Infrastructure -s MyStudents.WebApi
+dotnet run --project MyStudents.WebApi --launch-profile http
 ```
 
-### 3. Xóa Migration cuối cùng
-Sử dụng nếu bạn tạo nhầm Migration và **chưa** chạy lệnh `database update`.
+API chạy tại `http://localhost:5268`; OpenAPI và Scalar chỉ được bật trong Development. CORS Development cho phép `http://localhost:3000` và `https://localhost:3000`. Môi trường khác cần đặt `Cors__AllowedOrigins__0` (và các phần tử tiếp theo) thành origin frontend chính xác. Có thể bật docs ngoài Development bằng `ApiDocs__Enabled=true`.
+
+## Frontend
+
+Đặt `NEXT_PUBLIC_API_URL` trỏ tới origin API, không kèm `/api/v1` (ví dụ `http://localhost:5268`), rồi chạy `npm run dev` trong `MyStudents.Frontend`.
+
+## Database và migration
+
+Tạo migration bằng `dotnet ef migrations add <MigrationName> -p MyStudents.Infrastructure -s MyStudents.WebApi`; áp dụng bằng `dotnet ef database update -p MyStudents.Infrastructure -s MyStudents.WebApi`. Ứng dụng không tự chạy migration khi khởi động.
+
+## Docker Compose
+
+Sao chép `.env.example` thành `.env`, đặt `POSTGRES_PASSWORD` mạnh, rồi chạy:
 
 ```powershell
-dotnet ef migrations remove -p MyStudents.Infrastructure -s MyStudents.WebApi
+docker compose up --build -d
 ```
 
-### 4. Kiểm tra trạng thái
-Xem danh sách các Migration và trạng thái của chúng (đã chạy hay chưa).
+API lắng nghe cổng `8080`; PostgreSQL lắng nghe cổng `5432`. Chạy migration từ máy host với connection string trỏ tới `localhost:5432` trước khi dùng API. Compose dùng root `Dockerfile` làm cấu hình build duy nhất.
+
+## Kiểm thử và CI
 
 ```powershell
-dotnet ef migrations list -p MyStudents.Infrastructure -s MyStudents.WebApi
+dotnet build MyStudents.slnx --configuration Release
+dotnet test tests/MyStudents.AutomationTests/MyStudents.AutomationTests.csproj --configuration Release
 ```
 
----
-
-## 🚀 Cấu trúc dự án
-
-- **MyStudents.WebApi**: Lớp giao tiếp API (Startup Project).
-- **MyStudents.Application**: Chứa Logic nghiệp vụ (CQRS, MediatR, DTOs).
-- **MyStudents.Infrastructure**: Chứa cấu hình Database (EF Core, Context, Migrations).
-- **MyStudents.Domain**: Chứa các thực thể (Entities), hằng số (Constants) và Interfaces cốt lõi.
-
-## Bảo mật và tài khoản quản trị
-
-Không còn tài khoản admin hoạt động với mật khẩu mặc định. Xem [SECURITY_UPGRADE.md](SECURITY_UPGRADE.md) để áp dụng migration và khởi tạo admin bằng mật khẩu riêng.
-
-## Automation test
-
-Xem [hướng dẫn chạy test](tests/MyStudents.AutomationTests/README.md). Chạy `dotnet test MyStudents.slnx` từ thư mục backend.
+CI GitHub Actions build và chạy bộ automation tests trên .NET 10. Không commit `.env`, thông tin đăng nhập, JWT key hoặc khóa dịch vụ.
