@@ -66,6 +66,9 @@ if (args.Contains("--bootstrap-admin"))
 
 app.UseCors("Frontend");
 
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+    .AllowAnonymous();
+
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseStatusCodePages(async statusContext =>
 {

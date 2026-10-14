@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ConnectionStrings__DefaultConnection: Host=mystudents.db;Database=MyStudents;Username=${POSTGRES_USER:-mystudents};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       JwtSettings__Key: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}

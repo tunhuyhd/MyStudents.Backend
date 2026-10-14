@@ -26,8 +26,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Railway uses PORT environment variable
-ENV ASPNETCORE_URLS=http://+:8080
+# Render and other container hosts provide PORT; use 8080 locally by default.
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "MyStudents.WebApi.dll"]
+ENTRYPOINT ["sh", "-c", "export ASPNETCORE_URLS=http://0.0.0.0:${PORT:-8080}; exec dotnet MyStudents.WebApi.dll"]
