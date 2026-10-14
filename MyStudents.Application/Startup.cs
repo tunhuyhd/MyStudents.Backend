@@ -15,6 +15,7 @@ public static class Startup
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddScoped<MyStudents.Application.Classroom.Services.ClassroomService>();
 
         return services;
     }

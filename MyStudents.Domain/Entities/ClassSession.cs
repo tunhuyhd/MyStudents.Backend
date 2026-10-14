@@ -34,6 +34,9 @@ public class ClassSession : AuditableEntity, IAggregateRoot
     [Column("status")]
     public SessionStatus Status { get; set; } = SessionStatus.Scheduled;
 
+    [Column("is_manual")]
+    public bool IsManual { get; set; }
+
     [Column("note")]
     public string? Note { get; set; }
 

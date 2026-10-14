@@ -6,6 +6,7 @@ namespace MyStudents.Domain.Entities.Enum;
 
 public enum AttendanceStatus
 {
+    Pending = 0,
 	Present = 1,
 	Absent = 2,
 	Late = 3,

@@ -26,7 +26,7 @@ public class GetCurrentUserQueryHandler(
 
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new UnauthorizedAccessException();
         }
 
         var avatarUrl = string.IsNullOrEmpty(user.ImageUrl) 

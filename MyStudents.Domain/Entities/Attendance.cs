@@ -19,7 +19,7 @@ public class Attendance : AuditableEntity, IAggregateRoot
     public Student Student { get; set; } = null!;
 
     [Column("status")]
-    public AttendanceStatus Status { get; set; } = AttendanceStatus.Present;
+    public AttendanceStatus Status { get; set; } = AttendanceStatus.Pending;
 
     [Column("note")]
     public string? Note { get; set; }

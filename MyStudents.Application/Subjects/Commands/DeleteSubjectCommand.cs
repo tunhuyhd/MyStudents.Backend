@@ -14,7 +14,7 @@ public class DeleteSubjectCommandHandler(IApplicationDbContext context) : IReque
             .FirstOrDefaultAsync(s => s.Id == command.Id, cancellationToken);
 
         if (entity == null)
-            throw new Exception("Subject not found.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Subject", command.Id);
 
         context.Subjects.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);

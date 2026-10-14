@@ -18,7 +18,7 @@ public class DeleteClassCommandHandler(
             .FirstOrDefaultAsync(c => c.Id == command.Id && c.TeacherId == userId, cancellationToken);
 
         if (entity == null)
-            throw new Exception("Class not found or you don't have permission to delete it.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Class", command.Id);
 
         context.Classes.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);

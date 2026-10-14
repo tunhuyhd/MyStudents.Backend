@@ -34,11 +34,23 @@ public class User : AuditableEntity, IAggregateRoot
     [ConcurrencyCheck]
     public Guid SecurityStamp { get; set; } = Guid.NewGuid();
 
+    [Column("password_reset_token_hash")]
+    [ConcurrencyCheck]
+    public string? PasswordResetTokenHash { get; set; }
+
+    [Column("password_reset_expires_at")]
+    public DateTime? PasswordResetExpiresAt { get; set; }
+
+    [Column("password_reset_requested_at")]
+    public DateTime? PasswordResetRequestedAt { get; set; }
+
     public void RevokeSessions()
     {
         SecurityStamp = Guid.NewGuid();
         RefreshToken = null;
         RefreshTokenExpiryTime = null;
+        PasswordResetTokenHash = null;
+        PasswordResetExpiresAt = null;
     }
 
     [Column("refresh_token_expiry_time")]

@@ -2,6 +2,8 @@ using MyStudents.Application;
 using MyStudents.Infrastructure;
 using Scalar.AspNetCore;
 using MyStudents.WebApi.Middleware;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,30 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context => new BadRequestObjectResult(new ApiError(
+        "ERR_VALIDATION", "Please check the submitted fields.",
+        context.ModelState.Where(entry => entry.Value?.Errors.Count > 0)
+            .ToDictionary(entry => entry.Key, entry => entry.Value!.Errors.Select(_ => "Invalid or missing value.").ToArray()),
+        TraceId: context.HttpContext.TraceIdentifier));
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("password-reset-email", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+        { PermitLimit = 5, Window = TimeSpan.FromMinutes(15), QueueLimit = 0 }));
+    options.AddPolicy("password-reset-token", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+        { PermitLimit = 20, Window = TimeSpan.FromMinutes(5), QueueLimit = 0 }));
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        await context.HttpContext.Response.WriteAsJsonAsync(new ApiError("ERR_RATE_LIMIT", "Too many requests. Please try again later."), token);
+    };
+});
 builder.Services.AddOpenApi(); // Built-in OpenAPI .NET 10
 
 // Configure CORS
@@ -38,6 +63,18 @@ if (args.Contains("--bootstrap-admin"))
 app.UseCors("AllowAll"); // Move to top
 
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseStatusCodePages(async statusContext =>
+{
+    var response = statusContext.HttpContext.Response;
+    var error = response.StatusCode switch
+    {
+        401 => new ApiError("ERR_UNAUTHORIZED", "Authentication is required or the session has expired."),
+        403 => new ApiError("ERR_FORBIDDEN", "You do not have permission to perform this action."),
+        404 => new ApiError("ERR_NOT_FOUND", "The requested resource was not found."),
+        _ => new ApiError("ERR_REQUEST", "The request could not be completed.")
+    };
+    await response.WriteAsJsonAsync(error with { TraceId = statusContext.HttpContext.TraceIdentifier });
+});
 
 // Configure the HTTP request pipeline.
 // Enable API documentation in all environments for better debugging during staging
@@ -55,6 +92,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

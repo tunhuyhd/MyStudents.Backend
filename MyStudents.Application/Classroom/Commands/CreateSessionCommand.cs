@@ -1,13 +1,16 @@
-using MyStudents.Application.Common.Exceptions;
+﻿using System.Data;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using MyStudents.Application.Classroom.Services;
+using MyStudents.Application.Common.Exceptions;
 using MyStudents.Application.Common.Interfaces;
+using MyStudents.Application.Common.Validation;
 using MyStudents.Domain.Entities;
 using MyStudents.Domain.Entities.Enum;
-using Microsoft.EntityFrameworkCore;
 
 namespace MyStudents.Application.Classroom.Commands;
 
-public record CreateSessionCommand : IRequest<Guid>
+public record CreateSessionCommand : IRequest<Guid>, ISessionInput
 {
     public Guid ClassId { get; init; }
     public DateOnly Date { get; init; }
@@ -15,44 +18,22 @@ public record CreateSessionCommand : IRequest<Guid>
     public TimeOnly EndTime { get; init; }
     public string? Note { get; set; }
 }
-
-public class CreateSessionCommandHandler(IApplicationDbContext context) : IRequestHandler<CreateSessionCommand, Guid>
+public class CreateSessionCommandHandler(IApplicationDbContext db, ClassroomService classroom) : IRequestHandler<CreateSessionCommand, Guid>
 {
     public async Task<Guid> Handle(CreateSessionCommand request, CancellationToken cancellationToken)
     {
-        if (!await context.Classes.AnyAsync(c => c.Id == request.ClassId, cancellationToken))
-            throw new NotFoundException("Class", request.ClassId);
-
-        var session = new ClassSession
-        {
-            ClassId = request.ClassId,
-            Date = request.Date,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Note = request.Note,
-            Status = SessionStatus.Scheduled
-        };
-
-        context.ClassSessions.Add(session);
-        
-        // When creating a session, we should also create empty attendance records for all students currently in the class
-        var studentsInClass = await context.ClassStudents
-            .Where(cs => cs.ClassId == request.ClassId && cs.Status == StudentClassStatus.Active)
-            .Select(cs => cs.StudentId)
-            .ToListAsync(cancellationToken);
-
-        foreach (var studentId in studentsInClass)
-        {
-            context.Attendances.Add(new Attendance
-            {
-                Session = session,
-                StudentId = studentId,
-                Status = AttendanceStatus.Present // Default to Present or leave as is? Let's default to Present for convenience
-            });
-        }
-
-        await context.SaveChangesAsync(cancellationToken);
-
+        await using var transaction = await db.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        var entity = await db.Classes.FirstOrDefaultAsync(c => c.Id == request.ClassId, cancellationToken) ?? throw new NotFoundException("Class", request.ClassId);
+        if (entity.Status != ClassStatus.Active) throw new BusinessException("ERR_CLASS_NOT_ACTIVE");
+        if (request.Date < entity.StartDate || request.Date > entity.ExpectedEndDate) throw new BusinessException("ERR_SESSION_OUTSIDE_CLASS");
+        var session = new ClassSession { ClassId = entity.Id, Date = request.Date, StartTime = request.StartTime, EndTime = request.EndTime, Note = request.Note, IsManual = true };
+        await classroom.CheckConflictsAsync([session], null, null, cancellationToken);
+        session.OrderIndex = (await db.ClassSessions.Where(s => s.ClassId == entity.Id).Select(s => (int?)s.OrderIndex).MaxAsync(cancellationToken) ?? 0) + 1;
+        db.ClassSessions.Add(session);
+        await classroom.AddAttendancesAsync(entity.Id, [session], cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return session.Id;
     }
 }
+

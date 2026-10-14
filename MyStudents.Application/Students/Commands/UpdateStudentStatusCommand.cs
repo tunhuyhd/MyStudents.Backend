@@ -23,7 +23,7 @@ public class UpdateStudentStatusCommandHandler(
             .FirstOrDefaultAsync(s => s.Id == request.Id && s.CreatedBy == userId, cancellationToken);
 
         if (entity == null)
-            throw new Exception("Student not found or you don't have permission to update it.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Student", request.Id);
 
         entity.Status = request.Status;
 

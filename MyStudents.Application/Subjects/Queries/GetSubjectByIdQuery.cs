@@ -22,7 +22,7 @@ public class GetSubjectByIdQueryHandler(IApplicationDbContext context) : IReques
             .FirstOrDefaultAsync(cancellationToken);
 
         if (result == null)
-            throw new Exception("Subject not found.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Subject", request.Id);
 
         return result;
     }

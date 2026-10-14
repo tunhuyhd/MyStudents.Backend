@@ -14,7 +14,7 @@ public class UpdateSubjectCommandHandler(IApplicationDbContext context) : IReque
             .FirstOrDefaultAsync(s => s.Id == command.Id, cancellationToken);
 
         if (entity == null)
-            throw new Exception("Subject not found.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Subject", command.Id);
 
         entity.Name = command.Name;
         entity.Description = command.Description;

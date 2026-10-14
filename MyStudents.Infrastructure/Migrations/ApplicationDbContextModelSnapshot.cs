@@ -74,9 +74,11 @@ namespace MyStudents.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
-
                     b.HasIndex("StudentId");
+
+                    b.HasIndex("SessionId", "StudentId")
+                        .IsUnique()
+                        .HasFilter("is_deleted = false");
 
                     b.ToTable("attendances");
                 });
@@ -257,6 +259,10 @@ namespace MyStudents.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
+                    b.Property<bool>("IsManual")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_manual");
+
                     b.Property<Guid>("LastModifiedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("last_modified_by");
@@ -287,9 +293,11 @@ namespace MyStudents.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClassId");
-
                     b.HasIndex("ScheduleId");
+
+                    b.HasIndex("ClassId", "Date", "StartTime")
+                        .IsUnique()
+                        .HasFilter("is_deleted = false AND status <> 3");
 
                     b.ToTable("class_sessions");
                 });
@@ -346,9 +354,11 @@ namespace MyStudents.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClassId");
-
                     b.HasIndex("StudentId");
+
+                    b.HasIndex("ClassId", "StudentId")
+                        .IsUnique()
+                        .HasFilter("is_deleted = false");
 
                     b.ToTable("class_students");
                 });
@@ -623,6 +633,20 @@ namespace MyStudents.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
+                    b.Property<DateTime?>("PasswordResetExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("password_reset_expires_at");
+
+                    b.Property<DateTime?>("PasswordResetRequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("password_reset_requested_at");
+
+                    b.Property<string>("PasswordResetTokenHash")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("password_reset_token_hash");
+
                     b.Property<string>("RefreshToken")
                         .IsConcurrencyToken()
                         .HasColumnType("text")
@@ -659,6 +683,10 @@ namespace MyStudents.Infrastructure.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("PasswordResetTokenHash")
+                        .IsUnique()
+                        .HasFilter("password_reset_token_hash IS NOT NULL");
 
                     b.HasIndex("RoleId");
 

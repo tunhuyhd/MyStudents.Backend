@@ -59,6 +59,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         });
 
         // Seed Data
+        modelBuilder.Entity<User>().Property(u => u.PasswordResetTokenHash).HasMaxLength(64);
+        modelBuilder.Entity<User>().HasIndex(u => u.PasswordResetTokenHash)
+            .IsUnique().HasFilter("password_reset_token_hash IS NOT NULL");
+        modelBuilder.Entity<Attendance>().HasIndex(a => new { a.SessionId, a.StudentId })
+            .IsUnique().HasFilter("is_deleted = false");
+        modelBuilder.Entity<ClassStudent>().HasIndex(cs => new { cs.ClassId, cs.StudentId })
+            .IsUnique().HasFilter("is_deleted = false");
+        modelBuilder.Entity<ClassSession>().HasIndex(s => new { s.ClassId, s.Date, s.StartTime })
+            .IsUnique().HasFilter("is_deleted = false AND status <> 3");
+
         var adminRoleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var userRoleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
         var fixedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);

@@ -50,6 +50,9 @@ public static class Startup
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<AdminBootstrapper>();
+        services.AddSingleton(TimeProvider.System);
+        services.Configure<PasswordResetEmailOptions>(configuration.GetSection("PasswordResetEmail"));
+        services.AddScoped<IPasswordResetEmailSender, SmtpPasswordResetEmailSender>();
 
         // JWT Authentication
         services.AddAuthentication(options =>

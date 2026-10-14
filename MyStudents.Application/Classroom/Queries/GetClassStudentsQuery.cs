@@ -26,7 +26,7 @@ public class GetClassStudentsQueryHandler(
             .AnyAsync(c => c.Id == request.ClassId && c.TeacherId == userId, cancellationToken);
 
         if (!classExists)
-            throw new Exception("Class not found or you don't have permission.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Class", request.ClassId);
 
         var query = context.ClassStudents
             .Where(cs => cs.ClassId == request.ClassId)
@@ -37,7 +37,7 @@ public class GetClassStudentsQueryHandler(
             {
                 Id = cs.Student.Id,
                 FullName = cs.Student.LastName + " " + cs.Student.FirstName,
-                Email = cs.Student.Email,
+                Email = cs.Student.Email ?? string.Empty,
                 Status = cs.Status,
                 JoinedAt = cs.JoinedAt
             });

@@ -4,7 +4,7 @@ using MediatR;
 namespace MyStudents.Application.Common.Behaviors;
 
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -36,7 +36,9 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         if (failures.Any())
         {
             throw new Exceptions.ValidationException(
-                failures.Select(f => f.ErrorMessage));
+                failures.GroupBy(f => f.PropertyName.StartsWith("Request.") ? f.PropertyName[8..] : f.PropertyName)
+                    .ToDictionary(g => System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(g.Key),
+                        g => g.Select(f => f.ErrorMessage).Distinct().ToArray()));
         }
 
         return await next();

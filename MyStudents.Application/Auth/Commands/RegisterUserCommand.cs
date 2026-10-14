@@ -17,12 +17,14 @@ public class RegisterUserCommandHandler(
     public async Task<AuthResponse> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
         var request = command.Request;
+        var username = request.Username.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
 
-        if (await context.Users.AnyAsync(u => u.Username == request.Username, cancellationToken))
-            throw new Exception("Username already exists.");
+        if (await context.Users.AnyAsync(u => u.Username == username, cancellationToken))
+            throw new MyStudents.Application.Common.Exceptions.ConflictException("ERR_USERNAME_EXISTS");
 
-        if (await context.Users.AnyAsync(u => u.Email == request.Email, cancellationToken))
-            throw new Exception("Email already exists.");
+        if (await context.Users.AnyAsync(u => u.Email.ToLower() == email, cancellationToken))
+            throw new MyStudents.Application.Common.Exceptions.ConflictException("ERR_EMAIL_EXISTS");
 
         var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == UserRoles.User, cancellationToken);
         if (userRole == null) throw new Exception("User role not found.");
@@ -30,8 +32,8 @@ public class RegisterUserCommandHandler(
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Username = request.Username,
-            Email = request.Email,
+            Username = username,
+            Email = email,
             FullName = request.FullName,
             RoleId = userRole.Id,
             Role = userRole,

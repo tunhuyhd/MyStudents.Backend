@@ -42,4 +42,11 @@ public class SessionsController(IMediator mediator) : ControllerBase
         if (id != command.Id) return BadRequest();
         return await mediator.Send(command);
     }
+
+    [HttpPost("{id}/complete")]
+    public async Task<IActionResult> Complete(Guid id)
+    {
+        await mediator.Send(new CompleteSessionCommand(id));
+        return NoContent();
+    }
 }

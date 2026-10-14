@@ -5,7 +5,7 @@ using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Application.Students.Commands;
 
-public record UpdateStudentCommand : IRequest<Unit>
+public record UpdateStudentCommand : IRequest<Unit>, MyStudents.Application.Common.Validation.IStudentInput
 {
     public Guid Id { get; init; }
     public string FirstName { get; init; } = string.Empty;

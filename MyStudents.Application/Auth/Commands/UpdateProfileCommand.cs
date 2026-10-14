@@ -16,10 +16,19 @@ public class UpdateProfileCommandHandler(
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         
         
-        if (user == null) return false;
+        if (user == null) throw new UnauthorizedAccessException();
+        var email = request.Email.Trim().ToLowerInvariant();
+        if (await context.Users.AnyAsync(u => u.Id != user.Id && u.Email.ToLower() == email, cancellationToken))
+            throw new MyStudents.Application.Common.Exceptions.ConflictException("ERR_EMAIL_EXISTS");
 
         user.FullName = request.FullName;
-        user.Email = request.Email;
+        if (!string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+        {
+            user.PasswordResetTokenHash = null;
+            user.PasswordResetExpiresAt = null;
+            user.IsEmailVerified = false;
+        }
+        user.Email = email;
 
         await context.SaveChangesAsync(cancellationToken);
         return true;

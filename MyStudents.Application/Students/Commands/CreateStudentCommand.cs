@@ -5,7 +5,7 @@ using MyStudents.Domain.Entities.Enum;
 
 namespace MyStudents.Application.Students.Commands;
 
-public record CreateStudentCommand : IRequest<Guid>
+public record CreateStudentCommand : IRequest<Guid>, MyStudents.Application.Common.Validation.IStudentInput
 {
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;

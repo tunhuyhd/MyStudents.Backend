@@ -8,6 +8,7 @@ using MyStudents.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System.Net.Http;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MyStudents.WebApi.Controllers;
 
@@ -42,6 +43,34 @@ public class AuthController(
     public async Task<ActionResult<UserDto>> GetMe()
     {
         return await Mediator.Send(new GetCurrentUserQuery());
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset-email")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordCommand command)
+    {
+        await Mediator.Send(command);
+        return Accepted(new { message = "If the account is eligible, password reset instructions will be sent." });
+    }
+
+    [HttpPost("reset-password/validate")]
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset-token")]
+    public async Task<IActionResult> ValidateResetToken(ValidatePasswordResetTokenQuery command)
+    {
+        Response.Headers.CacheControl = "no-store";
+        await Mediator.Send(command);
+        return Ok(new { valid = true });
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [EnableRateLimiting("password-reset-token")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordCommand command)
+    {
+        await Mediator.Send(command);
+        return NoContent();
     }
 
     [HttpPost("logout")]

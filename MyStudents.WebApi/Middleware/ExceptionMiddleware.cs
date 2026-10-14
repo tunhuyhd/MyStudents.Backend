@@ -1,92 +1,38 @@
-using System.Net;
-using System.Text.Json;
+﻿using Microsoft.EntityFrameworkCore;
 using MyStudents.Application.Common.Exceptions;
+using Npgsql;
 
 namespace MyStudents.WebApi.Middleware;
 
-public class ExceptionMiddleware
+public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionMiddleware> _logger;
-    private readonly IHostEnvironment _env;
-
-    public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IHostEnvironment env)
-    {
-        _next = next;
-        _logger = logger;
-        _env = env;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
-        try
-        {
-            await _next(context);
-        }
-        catch (BusinessException ex)
-        {
-            _logger.LogWarning("Business rule violation: {ErrorCode}", ex.ErrorCode);
-            await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
-        }
-        catch (NotFoundException ex)
-        {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.NotFound);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.Unauthorized);
-        }
-        catch (ForbiddenException ex)
-        {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.Forbidden);
-        }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
-        {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.Conflict);
-        }
-        catch (Exception ex) when (ex is Npgsql.PostgresException { SqlState: "40001" } ||
-                                   ex.InnerException is Npgsql.PostgresException { SqlState: "40001" })
-        {
-            await HandleExceptionAsync(context, ex, HttpStatusCode.Conflict);
-        }
+        try { await next(context); }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested) { }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled Exception: {Message}", ex.Message);
-            await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
-        }
-    }
-
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception, HttpStatusCode statusCode)
-    {
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)statusCode;
-
-        var message = exception.Message;
-
-        object response;
-        if (exception is BusinessException bizEx)
-        {
-            response = new 
-            { 
-                errorCode = bizEx.ErrorCode, 
-                parameters = bizEx.Parameters,
-                message = bizEx.Message // Fallback
+            var (status, error) = ex switch
+            {
+                ValidationException validation => (400, new ApiError("ERR_VALIDATION", "Please check the submitted fields.", validation.Errors)),
+                BusinessException business => (400, new ApiError(business.ErrorCode, business.Message, Parameters: business.Parameters)),
+                ConflictException conflict => (409, new ApiError(conflict.ErrorCode, "The request conflicts with existing data.")),
+                NotFoundException => (404, new ApiError("ERR_NOT_FOUND", "The requested resource was not found.")),
+                UnauthorizedAccessException => (401, new ApiError("ERR_UNAUTHORIZED", "Authentication failed or the session is no longer valid.")),
+                ForbiddenException => (403, new ApiError("ERR_FORBIDDEN", "You do not have permission to perform this action.")),
+                DbUpdateConcurrencyException => (409, new ApiError("ERR_CONCURRENT_UPDATE", "The data changed. Reload and try again.")),
+                _ when PostgreSqlState(ex) is "40001" or "40P01" => (409, new ApiError("ERR_CONCURRENT_UPDATE", "The data changed. Reload and try again.")),
+                _ when PostgreSqlState(ex) == "23505" => (409, new ApiError("ERR_DUPLICATE", "A matching record already exists.")),
+                _ when PostgreSqlState(ex) == "23503" => (409, new ApiError("ERR_REFERENCE_CONFLICT", "A related record does not exist or is still in use.")),
+                _ => (500, new ApiError("ERR_INTERNAL", "An unexpected error occurred. Please try again later."))
             };
+            if (status == 500) logger.LogError(ex, "Unhandled request failure");
+            context.Response.StatusCode = status;
+            await context.Response.WriteAsJsonAsync(error with { TraceId = context.TraceIdentifier }, context.RequestAborted);
         }
-        else if (_env.IsProduction())
-        {
-            response = new { message = "An error occurred while processing your request." };
-        }
-        else
-        {
-            var detail = exception.InnerException != null 
-                ? $"{exception.Message} | Inner: {exception.InnerException.Message}" 
-                : exception.Message;
-            response = new { message = detail };
-        }
-
-        var json = JsonSerializer.Serialize(response);
-
-        await context.Response.WriteAsync(json);
     }
+
+    private static string? PostgreSqlState(Exception ex)
+        => (ex as PostgresException ?? ex.InnerException as PostgresException)?.SqlState;
 }
+

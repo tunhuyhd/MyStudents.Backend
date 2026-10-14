@@ -54,14 +54,14 @@ public class GetClassByIdQueryHandler(
                     Status = s.Status,
                     OrderIndex = s.OrderIndex,
                     Note = s.Note,
-                    TotalCount = c.Students.Count,
+                    TotalCount = s.Attendances.Count,
                     PresentCount = s.Attendances.Count(a => a.Status == AttendanceStatus.Present)
                 }).ToList()
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (result == null)
-            throw new Exception("Class not found or you don't have permission to view it.");
+            throw new MyStudents.Application.Common.Exceptions.NotFoundException("Class", request.Id);
 
         return result;
     }

@@ -26,7 +26,7 @@ public class UpdateAvatarCommandHandler(
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new UnauthorizedAccessException();
         }
 
         // If user already has an image, delete the old one to save space
