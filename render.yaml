@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: mystudents-api-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: JwtSettings__Key
+        generateValue: true
+      - key: JwtSettings__Issuer
+        value: MyStudentsAPI_Prod
+      - key: JwtSettings__Audience
+        value: MyStudentsClient_Prod
+      - key: Cors__AllowedOrigins__0
+        sync: false
+      - key: CloudinarySettings__UseLocalStorage
+        value: "false"
