@@ -25,17 +25,13 @@ Hướng dẫn dùng repo backend `tunhuyhd/MyStudents.Backend`; frontend tiếp
 
 4. Deploy và chờ build hoàn tất. Kiểm tra `https://<render-service>.onrender.com/health`, kỳ vọng HTTP 200 với `{"status":"healthy"}`. Ghi lại URL API này để cấu hình Vercel.
 
-## 3. Áp dụng schema cho database mới
+## 3. Áp dụng schema cho database
 
-API không tự chạy migration khi khởi động. Cài .NET SDK 10 và EF tool nếu cần, rồi chạy từ thư mục repo backend, với connection string Supabase trong biến môi trường:
+Khi chạy ở môi trường Production, API tự áp dụng các EF Core migrations còn thiếu trước khi bắt đầu nhận request. Vì vậy không cần chạy `dotnet ef database update` trên máy local hoặc dán SQL thủ công vào Supabase SQL Editor.
 
-```powershell
-$env:ConnectionStrings__DefaultConnection = "<SUPABASE_POSTGRES_CONNECTION_STRING>"
-dotnet tool install --global dotnet-ef --version 10.0.7
-dotnet ef database update -p MyStudents.Infrastructure -s MyStudents.WebApi
-```
+Đặt `ConnectionStrings__DefaultConnection` trên Render thành chuỗi Npgsql của Supabase Session Pooler (bật SSL). Kiểm tra Render logs sau deploy; cần thấy thông báo áp dụng migrations và deploy thành công. Nếu kết nối database hoặc migration lỗi, ứng dụng sẽ không khởi động và Render logs sẽ hiển thị lỗi để sửa trước khi chuyển frontend.
 
-Nếu `dotnet-ef` đã cài, bỏ qua lệnh cài. Giữ URI/database credential riêng tư. Migrations được áp dụng một lần cho database trước khi đăng nhập.
+Chỉ dùng cách tự migrate khi chạy một instance API tại một thời điểm, như service demo Render Free này. Không chạy đồng thời nhiều instance mới trong lúc migration đang diễn ra.
 
 ## 4. Tạo tài khoản admin demo
 

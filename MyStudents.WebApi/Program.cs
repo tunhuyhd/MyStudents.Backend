@@ -4,6 +4,8 @@ using Scalar.AspNetCore;
 using MyStudents.WebApi.Middleware;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MyStudents.Infrastructure.Persistence.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +55,17 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Apply pending schema changes before serving production traffic. Render runs a
+// single API instance for this demo, so migrations use the same configured
+// production connection string as the application.
+if (app.Environment.IsProduction())
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    app.Logger.LogInformation("Applying pending database migrations...");
+    await db.Database.MigrateAsync();
+}
 
 if (args.Contains("--bootstrap-admin"))
 {
